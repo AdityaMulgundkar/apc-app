@@ -1,0 +1,47 @@
+---
+description: Core coding standards for the project
+alwaysApply: true
+---
+
+# Coding Standards
+
+## Exports
+- Named exports only. No default exports.
+
+```typescript
+// Bad
+export default class Foo {}
+
+// Good
+export class Foo {}
+export const createFoo = () => {};
+```
+
+## Types
+- No `any`. Use `unknown` and narrow, or define a proper interface/type.
+
+## File Scope
+- One concern per file. Don't mix route handlers with business logic.
+
+## Functions
+- Keep functions small and pure where possible.
+- Extract reusable logic into utility functions.
+
+## Error Handling
+- Use throw-and-catch. Let Express error middleware handle unexpected errors.
+
+```typescript
+// Good
+if (!user) {
+  throw new NotFoundError("User not found");
+}
+```
+
+## Config
+- All environment variables accessed through `src/config.ts`.
+- No direct `process.env` reads outside the config module.
+
+## Project Structure
+- Backend code lives in `src/`.
+- Frontend code lives in `src/ui/`.
+- Do not restructure existing folders.

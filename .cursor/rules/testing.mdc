@@ -1,0 +1,31 @@
+---
+description: Testing conventions for TypeScript files
+globs: "**/*.ts"
+alwaysApply: false
+---
+
+# Testing
+
+## Framework
+- Jest for all unit tests.
+
+## File Location
+- Co-located with source: `foo.ts` gets `foo.test.ts` in the same directory.
+- Every new `.ts` file must have a corresponding `.test.ts` file.
+
+## Structure
+
+```typescript
+import { myFunction } from "./myModule";
+
+describe("myFunction", () => {
+  it("should handle the expected case", () => {
+    const result = myFunction("input");
+    expect(result).toBe("expected");
+  });
+
+  it("should throw on invalid input", () => {
+    expect(() => myFunction("")).toThrow();
+  });
+});
+```

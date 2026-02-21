@@ -1,0 +1,14 @@
+---
+description: Linting, formatting, and communication style
+alwaysApply: true
+---
+
+# Formatting & Linting
+
+## Tools
+- ESLint + Prettier for both backend (`src/`) and frontend (`src/ui/`).
+- Run linting before committing.
+
+## Communication Style
+- Be concise. No essays, no long explanations, no meta commentary.
+- State what changed and why in one line if needed.
