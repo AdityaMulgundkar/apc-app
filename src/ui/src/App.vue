@@ -1,6 +1,9 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png">
   <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <p :style="{ color: apiStatus === 'PASS' ? 'green' : apiStatus === 'FAIL' ? 'red' : '#888' }">
+    API: {{ apiStatus }}
+  </p>
   <button class="dev-btn" @click="openDevCredentials">Dev Credentials</button>
 </template>
 
@@ -12,9 +15,16 @@ export default {
   components: {
     HelloWorld
   },
+  data() {
+    return { apiStatus: 'checking...' }
+  },
   async mounted(){
-    const data = await window.ghl.getUserData();
-    console.log("user-details", data)
+    try {
+      const res = await fetch('/test-agents');
+      this.apiStatus = res.ok ? 'PASS' : 'FAIL';
+    } catch {
+      this.apiStatus = 'FAIL';
+    }
   },
   methods: {
     openDevCredentials() {
