@@ -1,4 +1,18 @@
 @import "tailwindcss";
+@source "./";
 @plugin "daisyui" {
   themes: light;
+}
+
+:root {
+  --ghl-primary: rgb(56, 160, 219);
+  --ghl-primary-hover: rgb(42, 140, 198);
+  --ghl-primary-light: rgba(56, 160, 219, 0.08);
+  --ghl-sidebar-bg: #1B2B3A;
+  --ghl-sidebar-text: #E2E8F0;
+  --ghl-text: #1f2937;
+  --ghl-text-muted: #9ca3af;
+  --ghl-border: #d1d5db;
+  --ghl-bg-subtle: #f9fafb;
+  --ghl-warning: #d97706;
 }

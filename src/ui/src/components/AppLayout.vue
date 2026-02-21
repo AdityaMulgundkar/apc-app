@@ -121,8 +121,8 @@ export default {
 <style scoped>
 .sidebar {
   min-width: 3.5rem;
-  background: #1B2B3A;
-  color: #E2E8F0;
+  background: var(--ghl-sidebar-bg);
+  color: var(--ghl-sidebar-text);
 }
 .sidebar-active {
   background: rgba(255, 255, 255, 0.12);

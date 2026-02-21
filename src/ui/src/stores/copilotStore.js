@@ -3,33 +3,27 @@ import * as api from '../api/copilotClient';
 
 export const useCopilotStore = defineStore('copilot', {
   state: () => ({
-    // Step tracking
-    step: 'select',  // select | review | test | results | optimize | apply
+    step: 'select',  // select | test | results | optimize | apply
 
-    // Agents
     agents: [],
     selectedAgentId: null,
     agent: null,
 
-    // Test generation
+    originalPrompt: '',
+    editedPrompt: '',
+
     testCases: [],
-
-    // Test results
     testResults: null,
-
-    // Optimization
     optimization: null,
-
-    // Selection within middle panel
     selectedTestIndex: 0,
 
-    // UI state
     loading: false,
     error: null,
   }),
 
   getters: {
-    currentPrompt: (state) => state.agent?.agentPrompt || '',
+    promptModified: (state) => state.editedPrompt !== state.originalPrompt,
+    currentPrompt: (state) => state.editedPrompt || state.originalPrompt,
     passRate: (state) => state.testResults?.passRate ?? null,
     failedTests: (state) => {
       if (!state.testResults?.results) return [];
@@ -46,7 +40,6 @@ export const useCopilotStore = defineStore('copilot', {
     canAccessStep: (state) => (step) => {
       const reqs = {
         select: true,
-        review: !!state.agent,
         test: state.testCases.length > 0,
         results: !!state.testResults,
         optimize: !!state.optimization,
@@ -80,12 +73,17 @@ export const useCopilotStore = defineStore('copilot', {
       this.optimization = null;
       try {
         this.agent = await api.getAgent(agentId);
-        this.step = 'review';
+        this.originalPrompt = this.agent.agentPrompt || '';
+        this.editedPrompt = this.originalPrompt;
       } catch (err) {
         this.error = err.message;
       } finally {
         this.loading = false;
       }
+    },
+
+    updateEditedPrompt(value) {
+      this.editedPrompt = value;
     },
 
     async generateTests() {
@@ -134,6 +132,8 @@ export const useCopilotStore = defineStore('copilot', {
       try {
         await api.applyPrompt(this.selectedAgentId, this.optimization.optimizedPrompt);
         this.agent.agentPrompt = this.optimization.optimizedPrompt;
+        this.originalPrompt = this.optimization.optimizedPrompt;
+        this.editedPrompt = this.optimization.optimizedPrompt;
         this.step = 'apply';
       } catch (err) {
         this.error = err.message;
@@ -157,6 +157,8 @@ export const useCopilotStore = defineStore('copilot', {
       this.step = 'select';
       this.selectedAgentId = null;
       this.agent = null;
+      this.originalPrompt = '';
+      this.editedPrompt = '';
       this.testCases = [];
       this.testResults = null;
       this.optimization = null;
