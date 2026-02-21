@@ -54,9 +54,11 @@ app.post("/decrypt-sso", async (req: Request, res: Response) => {
 });
 
 app.get("/test-agents", async (req: Request, res: Response) => {
-  const locationId = process.env.DEV_LOCATION_ID;
+  const locationId = (req.query.locationId as string)
+    || process.env.DEV_LOCATION_ID
+    || Object.keys(model.installationObjects)[0];
   if (!locationId || !ghlAuth.checkInstallationExists(locationId)) {
-    return res.status(400).json({ error: "No installation found for DEV_LOCATION_ID" });
+    return res.status(400).json({ error: "No installation found" });
   }
   try {
     const data = await ghlProvider.listAgents(locationId);
