@@ -27,7 +27,6 @@ Add these in marketplace app > Advanced Settings > Auth:
 
 - `voice-ai-agents.readonly` — list and get agents
 - `voice-ai-agents.write` — patch agent prompt
-- `voice-ai-dashboard.readonly` — read call logs/transcripts (optional, for real call data)
 
 ## GHL APIs
 
@@ -37,7 +36,7 @@ All require sub-account access token (already handled by existing `ghl.ts`):
 - `GET /voice-ai/agents/:agentId` — fetch agent config including prompt
 - `PATCH /voice-ai/agents/:agentId` — push optimized prompt back
 
-API version header: `Version: 2021-07-28`, Bearer auth.
+API version header: `Version: 2021-04-15`, Bearer auth. Base URL: `https://services.leadconnectorhq.com`
 
 ## Backend Architecture
 
