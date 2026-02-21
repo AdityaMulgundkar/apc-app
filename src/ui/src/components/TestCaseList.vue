@@ -14,6 +14,11 @@
         @click="store.selectTest(i)"
       >
         <div class="flex items-center gap-2 mb-1">
+          <span
+            class="status-dot"
+            :class="'status-' + store.testStatus(i)"
+            :title="store.testStatus(i)"
+          ></span>
           <span class="test-id">{{ tc.id }}</span>
           <span class="test-category">{{ tc.successCriteria?.[0]?.category }}</span>
         </div>
@@ -99,5 +104,20 @@ export default {
   font-size: 11px;
   color: var(--ghl-text-muted);
   margin: 4px 0 0;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-pending {
+  background: var(--ghl-border);
+}
+.status-passed {
+  background: #16a34a;
+}
+.status-failed {
+  background: #dc2626;
 }
 </style>

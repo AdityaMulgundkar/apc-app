@@ -13,7 +13,7 @@ export const useCopilotStore = defineStore('copilot', {
     editedPrompt: '',
 
     testCases: [],
-    testResults: null,
+    testResults: [],   // same length as testCases, null = not run
     optimization: null,
     selectedTestIndex: 0,
 
@@ -24,24 +24,36 @@ export const useCopilotStore = defineStore('copilot', {
   getters: {
     promptModified: (state) => state.editedPrompt !== state.originalPrompt,
     currentPrompt: (state) => state.editedPrompt || state.originalPrompt,
-    passRate: (state) => state.testResults?.passRate ?? null,
+    completedResults: (state) => state.testResults.filter((r) => r !== null),
+    hasAnyResult: (state) => state.testResults.some((r) => r !== null),
+    allTestsRun: (state) =>
+      state.testResults.length > 0 && state.testResults.every((r) => r !== null),
+    remainingCount: (state) => state.testResults.filter((r) => r === null).length,
+    passRate: (state) => {
+      const completed = state.testResults.filter((r) => r !== null);
+      if (!completed.length) return null;
+      const passed = completed.filter((r) => r.evaluation.overallPass).length;
+      return Math.round((passed / completed.length) * 100);
+    },
     failedTests: (state) => {
-      if (!state.testResults?.results) return [];
-      return state.testResults.results
-        .filter((r) => !r.evaluation.overallPass)
-        .map((r) => ({
-          scenario: r.evaluation.scenario || r.simulation.scenario,
-          transcript: r.simulation.transcript,
-          criteriaResults: r.evaluation.criteriaResults,
-        }));
+      return state.testResults
+        .filter((r) => r !== null && !r.evaluation.overallPass)
+        .map((r) => r.evaluation);
     },
     selectedTestCase: (state) => state.testCases[state.selectedTestIndex] || null,
-    selectedResult: (state) => state.testResults?.results?.[state.selectedTestIndex] || null,
+    selectedResult: (state) => state.testResults[state.selectedTestIndex] || null,
+    isTestRun: (state) => (index) => state.testResults[index] !== null,
+    testStatus: (state) => (index) => {
+      const r = state.testResults[index];
+      if (r === null || r === undefined) return 'pending';
+      return r.evaluation.overallPass ? 'passed' : 'failed';
+    },
     canAccessStep: (state) => (step) => {
+      const hasAnyResult = state.testResults.some((r) => r !== null);
       const reqs = {
         select: true,
         test: state.testCases.length > 0,
-        results: !!state.testResults,
+        results: hasAnyResult,
         optimize: !!state.optimization,
         apply: !!state.optimization,
       };
@@ -69,7 +81,7 @@ export const useCopilotStore = defineStore('copilot', {
       this.error = null;
       this.selectedAgentId = agentId;
       this.testCases = [];
-      this.testResults = null;
+      this.testResults = [];
       this.optimization = null;
       try {
         this.agent = await api.getAgent(agentId);
@@ -92,6 +104,7 @@ export const useCopilotStore = defineStore('copilot', {
       try {
         const result = await api.generateTestCases(this.selectedAgentId, this.currentPrompt);
         this.testCases = result.testCases || [];
+        this.testResults = new Array(this.testCases.length).fill(null);
         this.step = 'test';
       } catch (err) {
         this.error = err.message;
@@ -100,12 +113,36 @@ export const useCopilotStore = defineStore('copilot', {
       }
     },
 
-    async runTests() {
+    async runSingleTest(index) {
+      if (this.testResults[index] !== null) return;
       this.loading = true;
       this.error = null;
       try {
-        this.testResults = await api.runTests(this.selectedAgentId, this.testCases);
-        this.step = 'results';
+        const tc = this.testCases[index];
+        const response = await api.runTests(this.selectedAgentId, [tc]);
+        this.testResults[index] = response.results[0];
+      } catch (err) {
+        this.error = err.message;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async runRemainingTests() {
+      const pending = this.testCases
+        .map((tc, i) => ({ tc, i }))
+        .filter(({ i }) => this.testResults[i] === null);
+      if (!pending.length) return;
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await api.runTests(
+          this.selectedAgentId,
+          pending.map(({ tc }) => tc),
+        );
+        pending.forEach(({ i }, j) => {
+          this.testResults[i] = response.results[j];
+        });
       } catch (err) {
         this.error = err.message;
       } finally {
@@ -160,7 +197,7 @@ export const useCopilotStore = defineStore('copilot', {
       this.originalPrompt = '';
       this.editedPrompt = '';
       this.testCases = [];
-      this.testResults = null;
+      this.testResults = [];
       this.optimization = null;
       this.selectedTestIndex = 0;
       this.error = null;

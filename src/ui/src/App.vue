@@ -1,12 +1,14 @@
 <template>
   <AppLayout>
-    <template #middle v-if="store.step === 'test'">
-      <TestCaseList />
+    <template #middle v-if="store.step === 'test' || store.step === 'results'">
+      <TestCaseList v-if="store.step === 'test'" />
+      <TestResultsList v-else-if="store.step === 'results'" />
     </template>
 
     <template #default>
       <AgentSelector v-if="store.step === 'select'" />
       <TestCaseDetail v-else-if="store.step === 'test'" />
+      <ConversationView v-else-if="store.step === 'results'" />
       <div v-else class="flex flex-col items-center justify-center h-64 text-base-content/50">
         <p class="text-lg mb-4">Step: <span class="font-semibold text-base-content">{{ store.step }}</span></p>
         <p class="mb-4">Component coming soon.</p>
@@ -22,10 +24,12 @@ import AppLayout from './components/AppLayout.vue';
 import AgentSelector from './components/AgentSelector.vue';
 import TestCaseList from './components/TestCaseList.vue';
 import TestCaseDetail from './components/TestCaseDetail.vue';
+import TestResultsList from './components/TestResultsList.vue';
+import ConversationView from './components/ConversationView.vue';
 
 export default {
   name: 'App',
-  components: { AppLayout, AgentSelector, TestCaseList, TestCaseDetail },
+  components: { AppLayout, AgentSelector, TestCaseList, TestCaseDetail, TestResultsList, ConversationView },
   setup() {
     const store = useCopilotStore();
     return { store };

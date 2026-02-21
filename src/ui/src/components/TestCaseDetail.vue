@@ -39,12 +39,25 @@
 
     <div class="detail-actions">
       <button
+        v-if="!store.isTestRun(store.selectedTestIndex)"
         class="run-btn"
         :disabled="store.loading"
-        @click="store.runTests()"
+        @click="store.runSingleTest(store.selectedTestIndex)"
       >
         <svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
-        Run All Tests
+        Run This Test
+      </button>
+      <span v-else class="run-done" :class="store.testStatus(store.selectedTestIndex) === 'passed' ? 'run-done-pass' : 'run-done-fail'">
+        {{ store.testStatus(store.selectedTestIndex) === 'passed' ? 'Passed' : 'Failed' }}
+      </span>
+
+      <button
+        v-if="store.remainingCount > 0"
+        class="run-btn run-btn-secondary"
+        :disabled="store.loading"
+        @click="store.runRemainingTests()"
+      >
+        Run Remaining ({{ store.remainingCount }})
       </button>
     </div>
   </div>
@@ -168,6 +181,9 @@ export default {
   line-height: 1.4;
 }
 .detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding-top: 8px;
 }
 .run-btn {
@@ -190,6 +206,30 @@ export default {
 .run-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+.run-btn-secondary {
+  background: transparent;
+  color: var(--ghl-primary);
+  border: 1px solid var(--ghl-primary);
+}
+.run-btn-secondary:hover {
+  background: var(--ghl-primary-light);
+}
+.run-done {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+.run-done-pass {
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.08);
+}
+.run-done-fail {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
 }
 .btn-icon {
   width: 16px;
