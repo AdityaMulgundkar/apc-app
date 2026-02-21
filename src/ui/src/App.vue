@@ -1,11 +1,13 @@
 <template>
   <AppLayout>
-    <template v-if="store.step === 'select'">
-      <AgentSelector />
+    <template #middle v-if="store.step === 'test'">
+      <TestCaseList />
     </template>
 
-    <template v-else>
-      <div class="flex flex-col items-center justify-center h-64 text-base-content/50">
+    <template #default>
+      <AgentSelector v-if="store.step === 'select'" />
+      <TestCaseDetail v-else-if="store.step === 'test'" />
+      <div v-else class="flex flex-col items-center justify-center h-64 text-base-content/50">
         <p class="text-lg mb-4">Step: <span class="font-semibold text-base-content">{{ store.step }}</span></p>
         <p class="mb-4">Component coming soon.</p>
         <button class="btn btn-outline btn-sm" @click="store.reset()">← Back to Agent Select</button>
@@ -18,10 +20,12 @@
 import { useCopilotStore } from './stores/copilotStore';
 import AppLayout from './components/AppLayout.vue';
 import AgentSelector from './components/AgentSelector.vue';
+import TestCaseList from './components/TestCaseList.vue';
+import TestCaseDetail from './components/TestCaseDetail.vue';
 
 export default {
   name: 'App',
-  components: { AppLayout, AgentSelector },
+  components: { AppLayout, AgentSelector, TestCaseList, TestCaseDetail },
   setup() {
     const store = useCopilotStore();
     return { store };

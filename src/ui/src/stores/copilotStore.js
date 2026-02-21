@@ -90,7 +90,7 @@ export const useCopilotStore = defineStore('copilot', {
       this.loading = true;
       this.error = null;
       try {
-        const result = await api.generateTestCases(this.selectedAgentId);
+        const result = await api.generateTestCases(this.selectedAgentId, this.currentPrompt);
         this.testCases = result.testCases || [];
         this.step = 'test';
       } catch (err) {

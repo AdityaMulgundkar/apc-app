@@ -28,7 +28,8 @@ export const createCopilotRouter = (agentService: AgentService, llmService: LlmS
 
   router.post('/agents/:id/test', async (req: Request, res: Response) => {
     try {
-      const prompt = await agentService.getAgentPrompt(req.locationId!, req.params.id);
+      const prompt = req.body.prompt
+        || await agentService.getAgentPrompt(req.locationId!, req.params.id);
       const result = await llmService.generateTestCases(prompt);
       res.json(result);
     } catch (error: any) {

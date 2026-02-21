@@ -13,7 +13,7 @@ const loadPrompt = (name: string): string =>
 
 const createModel = () =>
   new ChatAnthropic({
-    model: 'claude-sonnet-4-20250514',
+    model: config.anthropic.model,
     temperature: 0,
     anthropicApiKey: config.anthropic.apiKey,
   });
