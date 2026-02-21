@@ -117,10 +117,22 @@ app.post("/decrypt-sso",async (req: Request, res: Response) => {
   }
 })
 
-/*`app.get("/", function (req, res) {
-  res.sendFile(path + "index.html");
-});` sets up a route for the root URL ("/") of the server.  This is
- used to serve the main HTML file of a web application. */
+app.get("/dev-credentials", (req: Request, res: Response) => {
+  const installations = ghl.model.installationObjects;
+  const entries = Object.entries(installations);
+  if (entries.length === 0) {
+    return res.status(404).json({ error: "No installations found. Open the app inside GHL first." });
+  }
+  const credentials = entries.map(([resourceId, details]) => ({
+    resourceId,
+    accessToken: details.access_token,
+    refreshToken: details.refresh_token,
+    locationId: details.locationId ?? null,
+    companyId: details.companyId ?? null,
+  }));
+  res.json(credentials);
+});
+
 app.get("/", function (req, res) {
   res.sendFile(path + "index.html");
 });
