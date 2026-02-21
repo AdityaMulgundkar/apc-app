@@ -1,5 +1,5 @@
 export interface AgentAction {
-  _id: string;
+  id: string;
   actionType: string;
   name: string;
   actionParameters: Record<string, unknown>;
@@ -26,12 +26,13 @@ export interface AgentConfig {
   welcomeMessage: string;
   agentPrompt: string;
   voiceId: string;
-  language: string;
+  language?: string;
   patienceLevel: string;
   maxCallDuration: number;
   sendUserIdleReminders: boolean;
   reminderAfterIdleTimeSeconds: number;
   inboundNumber?: string | null;
+  inboundNumbers: string[];
   numberPoolId?: string | null;
   callEndWorkflowIds: string[];
   sendPostCallNotificationTo?: SendPostCallNotification;
@@ -40,6 +41,7 @@ export interface AgentConfig {
   isAgentAsBackupDisabled: boolean;
   translation?: { enabled: boolean; language?: string };
   actions: AgentAction[];
+  prompts?: Record<string, unknown>;
 }
 
 export interface AgentListResponse {
@@ -47,6 +49,7 @@ export interface AgentListResponse {
   total: number;
   page: number;
   pageSize: number;
+  traceId?: string;
 }
 
 export interface PatchAgentRequest {

@@ -1,7 +1,7 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png">
   <HelloWorld msg="Welcome to Your Vue.js App"/>
-  <button class="dev-btn" @click="copyDevCredentials">{{ copyLabel }}</button>
+  <button class="dev-btn" @click="openDevCredentials">Dev Credentials</button>
 </template>
 
 <script>
@@ -12,39 +12,13 @@ export default {
   components: {
     HelloWorld
   },
-  data() {
-    return {
-      copyLabel: 'Copy Dev Credentials'
-    }
-  },
   async mounted(){
     const data = await window.ghl.getUserData();
     console.log("user-details", data)
   },
   methods: {
-    async copyDevCredentials() {
-      try {
-        const res = await fetch('/dev-credentials');
-        const data = await res.json();
-        if (!res.ok) {
-          this.copyLabel = 'No credentials found';
-          setTimeout(() => { this.copyLabel = 'Copy Dev Credentials'; }, 2000);
-          return;
-        }
-        const entry = data[0];
-        const envText = [
-          `DEV_ACCESS_TOKEN=${entry.accessToken}`,
-          `DEV_REFRESH_TOKEN=${entry.refreshToken}`,
-          `DEV_LOCATION_ID=${entry.locationId || entry.resourceId}`,
-        ].join('\n');
-        await navigator.clipboard.writeText(envText);
-        this.copyLabel = 'Copied!';
-        setTimeout(() => { this.copyLabel = 'Copy Dev Credentials'; }, 2000);
-      } catch (err) {
-        console.error('Failed to copy dev credentials', err);
-        this.copyLabel = 'Error';
-        setTimeout(() => { this.copyLabel = 'Copy Dev Credentials'; }, 2000);
-      }
+    openDevCredentials() {
+      window.open('/dev-credentials', '_blank');
     }
   }
 }
