@@ -1,11 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
 import { GhlAuth } from '../providers/ghlAuth';
+import { Model } from '../model';
+import { config } from '../config';
 
-export const createAuthMiddleware = (ghlAuth: GhlAuth) => {
+export const resolveLocationId = (req: Request, model: Model): string | undefined => {
+  return (req.query.locationId as string)
+    || config.dev.locationId
+    || Object.keys(model.installationObjects)[0]
+    || undefined;
+};
+
+export const createAuthMiddleware = (ghlAuth: GhlAuth, model: Model) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const locationId = req.query.locationId as string;
+    const locationId = resolveLocationId(req, model);
     if (!locationId) {
-      res.status(400).json({ error: 'Missing required query param: locationId' });
+      res.status(400).json({ error: 'Missing locationId — pass as query param or set DEV_LOCATION_ID' });
       return;
     }
     if (!ghlAuth.checkInstallationExists(locationId)) {

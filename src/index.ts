@@ -6,6 +6,7 @@ import { GhlAuth } from "./providers/ghlAuth";
 import { GhlProvider } from "./providers/ghlProvider";
 import { decryptSSOData } from "./utils/sso";
 import { logger } from "./utils/logger";
+import { resolveLocationId } from "./middleware/auth";
 
 const path = __dirname + "/ui/dist/";
 
@@ -54,9 +55,7 @@ app.post("/decrypt-sso", async (req: Request, res: Response) => {
 });
 
 app.get("/test-agents", async (req: Request, res: Response) => {
-  const locationId = (req.query.locationId as string)
-    || process.env.DEV_LOCATION_ID
-    || Object.keys(model.installationObjects)[0];
+  const locationId = resolveLocationId(req, model);
   if (!locationId || !ghlAuth.checkInstallationExists(locationId)) {
     return res.status(400).json({ error: "No installation found" });
   }
