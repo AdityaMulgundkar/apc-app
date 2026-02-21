@@ -20,6 +20,9 @@ export const useCopilotStore = defineStore('copilot', {
     // Optimization
     optimization: null,
 
+    // Selection within middle panel
+    selectedTestIndex: 0,
+
     // UI state
     loading: false,
     error: null,
@@ -38,10 +41,24 @@ export const useCopilotStore = defineStore('copilot', {
           criteriaResults: r.evaluation.criteriaResults,
         }));
     },
+    selectedTestCase: (state) => state.testCases[state.selectedTestIndex] || null,
+    selectedResult: (state) => state.testResults?.results?.[state.selectedTestIndex] || null,
+    canAccessStep: (state) => (step) => {
+      const reqs = {
+        select: true,
+        review: !!state.agent,
+        test: state.testCases.length > 0,
+        results: !!state.testResults,
+        optimize: !!state.optimization,
+        apply: !!state.optimization,
+      };
+      return reqs[step] ?? false;
+    },
   },
 
   actions: {
     async loadAgents() {
+      if (this.agents.length > 0 || this.loading) return;
       this.loading = true;
       this.error = null;
       try {
@@ -125,6 +142,17 @@ export const useCopilotStore = defineStore('copilot', {
       }
     },
 
+    selectTest(index) {
+      this.selectedTestIndex = index;
+    },
+
+    goToStep(step) {
+      if (this.canAccessStep(step)) {
+        this.step = step;
+        this.selectedTestIndex = 0;
+      }
+    },
+
     reset() {
       this.step = 'select';
       this.selectedAgentId = null;
@@ -132,6 +160,7 @@ export const useCopilotStore = defineStore('copilot', {
       this.testCases = [];
       this.testResults = null;
       this.optimization = null;
+      this.selectedTestIndex = 0;
       this.error = null;
     },
   },
