@@ -1,56 +1,55 @@
 <template>
   <div v-if="result" class="conversation-wrapper">
-    <div class="conversation-scroll">
-      <!-- Header -->
-      <div class="conv-header">
-        <div>
-          <span class="conv-id">{{ store.selectedTestCase?.id }}</span>
-          <h2 class="conv-title">{{ store.selectedTestCase?.scenario }}</h2>
-        </div>
-        <span class="conv-verdict" :class="result.evaluation.overallPass ? 'verdict-pass' : 'verdict-fail'">
-          {{ result.evaluation.overallPass ? 'Passed' : 'Failed' }}
-        </span>
+    <div class="conv-header">
+      <div>
+        <span class="conv-id">{{ store.selectedTestCase?.id }}</span>
+        <h2 class="conv-title">{{ store.selectedTestCase?.scenario }}</h2>
       </div>
+      <span class="conv-verdict" :class="result.evaluation.overallPass ? 'verdict-pass' : 'verdict-fail'">
+        {{ result.evaluation.overallPass ? 'Passed' : 'Failed' }}
+      </span>
+    </div>
 
-      <!-- Chat transcript -->
-      <div class="chat-area">
-        <div
-          v-for="(msg, i) in result.simulation.transcript"
-          :key="i"
-          class="chat-row"
-          :class="msg.role === 'agent' ? 'chat-row-agent' : 'chat-row-caller'"
-        >
-          <div class="chat-label">{{ msg.role === 'agent' ? 'AI Agent' : 'Caller' }}</div>
-          <div class="chat-bubble" :class="msg.role === 'agent' ? 'bubble-agent' : 'bubble-caller'">
-            {{ msg.content }}
-          </div>
-        </div>
-      </div>
+    <div v-if="store.resultsAreStale" class="stale-banner">
+      <svg class="stale-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" /></svg>
+      Prompt has been modified — these results may be outdated
+    </div>
 
-      <!-- Evaluation summary -->
-      <div class="eval-section">
-        <h3 class="eval-heading">Evaluation</h3>
-        <p class="eval-summary">{{ result.evaluation.summary }}</p>
-
-        <div class="criteria-results">
-          <div
-            v-for="cr in result.evaluation.criterionResults"
-            :key="cr.criterionId"
-            class="criterion-row"
-          >
-            <div class="criterion-header">
-              <svg v-if="cr.passed" class="criterion-icon criterion-pass" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-              <svg v-else class="criterion-icon criterion-fail" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              <span class="criterion-id">{{ cr.criterionId }}</span>
-            </div>
-            <p class="criterion-reasoning">{{ cr.reasoning }}</p>
-          </div>
+    <div class="chat-area">
+      <div
+        v-for="(msg, i) in result.simulation.transcript"
+        :key="i"
+        class="chat-row"
+        :class="msg.role === 'agent' ? 'chat-row-agent' : 'chat-row-caller'"
+      >
+        <div class="chat-label">{{ msg.role === 'agent' ? 'AI Agent' : 'Caller' }}</div>
+        <div class="chat-bubble" :class="msg.role === 'agent' ? 'bubble-agent' : 'bubble-caller'">
+          {{ msg.content }}
         </div>
       </div>
     </div>
 
-    <!-- Sticky bottom action -->
-    <div v-if="store.failedTests.length > 0" class="conv-actions">
+    <div class="eval-section">
+      <h3 class="eval-heading">Evaluation</h3>
+      <p class="eval-summary">{{ result.evaluation.summary }}</p>
+
+      <div class="criteria-results">
+        <div
+          v-for="cr in result.evaluation.criterionResults"
+          :key="cr.criterionId"
+          class="criterion-row"
+        >
+          <div class="criterion-header">
+            <svg v-if="cr.passed" class="criterion-icon criterion-pass" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+            <svg v-else class="criterion-icon criterion-fail" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            <span class="criterion-id">{{ cr.criterionId }}</span>
+          </div>
+          <p class="criterion-reasoning">{{ cr.reasoning }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="store.failedTests.length > 0 && !store.resultsAreStale && !store.applied" class="conv-actions">
       <button
         class="optimize-btn"
         :disabled="store.loading"
@@ -86,16 +85,25 @@ export default {
 
 <style scoped>
 .conversation-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 48px);
   max-width: 700px;
-  position: sticky;
-  top: 0;
 }
-.conversation-scroll {
-  flex: 1;
-  overflow-y: auto;
+.stale-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  border-radius: 8px;
+}
+.stale-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 .conv-header {
   display: flex;
@@ -240,7 +248,8 @@ export default {
 
 /* Actions */
 .conv-actions {
-  flex-shrink: 0;
+  position: sticky;
+  bottom: -24px;
   padding: 16px 0;
   border-top: 1px solid var(--ghl-border);
   background: #fff;

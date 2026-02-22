@@ -53,7 +53,7 @@
       </div>
 
       <!-- Right / Main Panel -->
-      <div class="right-panel flex-1 overflow-y-auto p-6 relative">
+      <div class="flex-1 overflow-y-auto p-6 relative">
         <div v-if="store.loading" class="absolute inset-0 flex items-center justify-center bg-base-100/80 z-10">
           <span class="loading loading-spinner loading-lg text-primary"></span>
         </div>

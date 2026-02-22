@@ -44,7 +44,8 @@ export const createCopilotRouter = (agentService: AgentService, llmService: LlmS
       if (!testCases?.length) {
         return res.status(400).json({ error: 'testCases required in request body' });
       }
-      const prompt = await agentService.getAgentPrompt(req.locationId!, req.params.id);
+      const prompt = req.body.prompt
+        || await agentService.getAgentPrompt(req.locationId!, req.params.id);
 
       const results = [];
       for (const tc of testCases) {
@@ -73,7 +74,8 @@ export const createCopilotRouter = (agentService: AgentService, llmService: LlmS
       if (!failures?.length) {
         return res.status(400).json({ error: 'failures required in request body' });
       }
-      const prompt = await agentService.getAgentPrompt(req.locationId!, req.params.id);
+      const prompt = req.body.prompt
+        || await agentService.getAgentPrompt(req.locationId!, req.params.id);
       const result = await llmService.optimizePrompt(prompt, failures);
       res.json(result);
     } catch (error: any) {

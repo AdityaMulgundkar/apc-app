@@ -14,7 +14,7 @@
       </select>
 
       <button
-        v-if="store.agent"
+        v-if="store.agent && !store.applied"
         class="generate-btn"
         :disabled="store.loading || !store.editedPrompt.trim()"
         @click="store.generateTests()"
@@ -34,6 +34,7 @@
         class="prompt-textarea"
         rows="18"
         :value="store.editedPrompt"
+        :disabled="store.applied"
         @input="store.updateEditedPrompt($event.target.value)"
       ></textarea>
 

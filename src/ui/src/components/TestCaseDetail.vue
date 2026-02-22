@@ -37,7 +37,7 @@
       </ul>
     </div>
 
-    <div class="detail-actions">
+    <div v-if="!store.applied" class="detail-actions">
       <button
         v-if="!store.isTestRun(store.selectedTestIndex)"
         class="run-btn"

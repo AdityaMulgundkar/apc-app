@@ -27,17 +27,17 @@ export function generateTestCases(agentId, prompt) {
   });
 }
 
-export function runTests(agentId, testCases) {
+export function runTests(agentId, testCases, prompt) {
   return request(`/agents/${agentId}/run`, {
     method: 'POST',
-    body: JSON.stringify({ testCases }),
+    body: JSON.stringify({ testCases, prompt }),
   });
 }
 
-export function optimizePrompt(agentId, failures) {
+export function optimizePrompt(agentId, failures, prompt) {
   return request(`/agents/${agentId}/optimize`, {
     method: 'POST',
-    body: JSON.stringify({ failures }),
+    body: JSON.stringify({ failures, prompt }),
   });
 }
 
