@@ -8,6 +8,9 @@ import { TestGenerationResultSchema, TestGenerationResult, TestCase } from '../t
 import { SimulationResultSchema, SimulationResult, TestResultSchema, TestResult } from '../types/evaluation';
 import { OptimizationResultSchema, OptimizationResult } from '../types/optimization';
 import { AgentAction } from '../types/agent';
+import { SimulationV2Result } from '../types/simulation';
+import { ConversationSimulator } from './conversationSimulator';
+import { MockToolExecutor } from './mockToolExecutor';
 
 const loadPrompt = (name: string): string =>
   readFileSync(resolve(__dirname, `../prompts/${name}.md`), 'utf-8');
@@ -24,20 +27,30 @@ export class LlmService {
   private simulatePromptTemplate: string;
   private evaluatePromptTemplate: string;
   private optimizePromptTemplate: string;
+  private conversationSimulator: ConversationSimulator;
 
   constructor() {
     this.generatePromptTemplate = loadPrompt('generate');
     this.simulatePromptTemplate = loadPrompt('simulate');
     this.evaluatePromptTemplate = loadPrompt('evaluate');
     this.optimizePromptTemplate = loadPrompt('optimize');
+    this.conversationSimulator = new ConversationSimulator(new MockToolExecutor());
   }
 
-  async generateTestCases(agentPrompt: string): Promise<TestGenerationResult> {
+  async generateTestCases(agentPrompt: string, actions?: AgentAction[]): Promise<TestGenerationResult> {
     logger.info('Generating test cases');
     const prompt = ChatPromptTemplate.fromTemplate(this.generatePromptTemplate);
     const model = createModel().withStructuredOutput(TestGenerationResultSchema);
     const chain = prompt.pipe(model);
-    const result = await chain.invoke({ agentPrompt });
+
+    const availableTools = actions?.length
+      ? actions.map((a) => {
+          const desc = (a.actionParameters as Record<string, unknown>)?.description || '';
+          return `- ${a.name} (${a.actionType.replace(/_/g, ' ')}): ${desc}`;
+        }).join('\n')
+      : 'No tools configured for this agent.';
+
+    const result = await chain.invoke({ agentPrompt, availableTools });
     logger.info({ count: result.testCases.length }, 'Test cases generated');
     return result;
   }
@@ -65,10 +78,21 @@ export class LlmService {
     });
   }
 
+  async simulateConversationV2(
+    agentPrompt: string,
+    testCase: TestCase,
+    actions: AgentAction[] = [],
+    welcomeMessage?: string,
+  ): Promise<SimulationV2Result> {
+    logger.info({ testCaseId: testCase.id }, 'Simulating conversation (v2 multi-turn)');
+    return this.conversationSimulator.simulate(agentPrompt, testCase, actions, welcomeMessage);
+  }
+
   async evaluateTranscript(
     agentPrompt: string,
     testCase: TestCase,
     simulation: SimulationResult,
+    actions?: AgentAction[],
   ): Promise<TestResult> {
     logger.info({ testCaseId: testCase.id }, 'Evaluating transcript');
     const prompt = ChatPromptTemplate.fromTemplate(this.evaluatePromptTemplate);
@@ -83,6 +107,19 @@ export class LlmService {
       .map((msg) => `${msg.role}: ${msg.content}`)
       .join('\n');
 
+    const availableTools = actions?.length
+      ? actions.map((a) => {
+          const desc = (a.actionParameters as Record<string, unknown>)?.description || '';
+          return `- ${a.name} (${a.actionType.replace(/_/g, ' ')}): ${desc}`;
+        }).join('\n')
+      : 'No tools configured for this agent.';
+
+    const toolCallLog = simulation.toolCallLog?.length
+      ? simulation.toolCallLog
+          .map((entry) => `Turn ${entry.turn}: Called "${entry.actionName}" (${entry.actionType}) with ${JSON.stringify(entry.params)} → ${JSON.stringify(entry.result)}`)
+          .join('\n')
+      : 'No tool calls were made during this conversation.';
+
     return chain.invoke({
       agentPrompt,
       scenario: testCase.scenario,
@@ -91,14 +128,23 @@ export class LlmService {
       testCaseId: testCase.id,
       successCriteria,
       transcript,
+      availableTools,
+      toolCallLog,
     });
   }
 
-  async optimizePrompt(agentPrompt: string, failures: TestResult[]): Promise<OptimizationResult> {
+  async optimizePrompt(agentPrompt: string, failures: TestResult[], actions?: AgentAction[]): Promise<OptimizationResult> {
     logger.info({ failureCount: failures.length }, 'Optimizing prompt');
     const prompt = ChatPromptTemplate.fromTemplate(this.optimizePromptTemplate);
     const model = createModel().withStructuredOutput(OptimizationResultSchema);
     const chain = prompt.pipe(model);
+
+    const availableTools = actions?.length
+      ? actions.map((a) => {
+          const desc = (a.actionParameters as Record<string, unknown>)?.description || '';
+          return `- ${a.name} (${a.actionType.replace(/_/g, ' ')}): ${desc}`;
+        }).join('\n')
+      : 'No tools configured for this agent.';
 
     const failuresText = failures
       .map((f) => {
@@ -109,6 +155,7 @@ export class LlmService {
 
     return chain.invoke({
       agentPrompt,
+      availableTools,
       failures: failuresText,
     });
   }

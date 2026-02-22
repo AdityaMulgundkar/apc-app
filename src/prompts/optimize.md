@@ -4,6 +4,10 @@ You are a prompt engineer specializing in voice AI agents. Given an agent prompt
 
 {agentPrompt}
 
+## Available Tools
+
+{availableTools}
+
 ## Test Failures
 
 {failures}
@@ -14,6 +18,7 @@ Analyze each failure and identify what in the prompt caused it. Then rewrite the
 - Minimal — only fix what's broken, don't rewrite everything
 - Specific — add explicit instructions for the failure cases
 - Compatible — don't break behaviors that were already passing
+- Tool-aware — only reference tools listed in "Available Tools" above. Do not invent tools that don't exist.
 
 List each change you make as an issue/fix pair.
 

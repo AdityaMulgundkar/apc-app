@@ -77,12 +77,11 @@ export const useCopilotStore = defineStore('copilot', {
     canAccessStep() {
       return (step) => {
         const hasAnyResult = this.testResults.some((r) => r !== null);
-        const hasFailed = this.testResults.some((r) => r !== null && !r.evaluation.overallPass);
         const reqs = {
           select: true,
           test: this.testCases.length > 0,
           results: hasAnyResult,
-          optimize: hasFailed,
+          optimize: this.optimization !== null,
           apply: hasAnyResult,
         };
         return reqs[step] ?? false;
@@ -135,7 +134,7 @@ export const useCopilotStore = defineStore('copilot', {
       this.loading = true;
       this.error = null;
       try {
-        const result = await api.generateTestCases(this.selectedAgentId, this.currentPrompt);
+        const result = await api.generateTestCases(this.selectedAgentId, this.currentPrompt, this.agent?.actions);
         this.testCases = result.testCases || [];
         this.testResults = new Array(this.testCases.length).fill(null);
         this.baselineResults = [];
@@ -202,7 +201,7 @@ export const useCopilotStore = defineStore('copilot', {
       this.loading = true;
       this.error = null;
       try {
-        this.optimization = await api.optimizePrompt(this.selectedAgentId, this.failedTests, this.currentPrompt);
+        this.optimization = await api.optimizePrompt(this.selectedAgentId, this.failedTests, this.currentPrompt, this.agent?.actions);
         this.editedPrompt = this.optimization.optimizedPrompt;
         this.iterationCount++;
         this.testResults = this.testResults.map((r) =>

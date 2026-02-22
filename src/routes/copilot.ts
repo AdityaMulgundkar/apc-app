@@ -30,7 +30,7 @@ export const createCopilotRouter = (agentService: AgentService, llmService: LlmS
     try {
       const prompt = req.body.prompt
         || await agentService.getAgentPrompt(req.locationId!, req.params.id);
-      const result = await llmService.generateTestCases(prompt);
+      const result = await llmService.generateTestCases(prompt, req.body.actions);
       res.json(result);
     } catch (error: any) {
       logger.error({ err: error }, 'Failed to generate test cases');
@@ -49,8 +49,10 @@ export const createCopilotRouter = (agentService: AgentService, llmService: LlmS
 
       const results = [];
       for (const tc of testCases) {
-        const simulation = await llmService.simulateConversation(prompt, tc, actions);
-        const evaluation = await llmService.evaluateTranscript(prompt, tc, simulation);
+        const simulation = actions?.length
+          ? await llmService.simulateConversationV2(prompt, tc, actions)
+          : await llmService.simulateConversation(prompt, tc);
+        const evaluation = await llmService.evaluateTranscript(prompt, tc, simulation, actions);
         results.push({ simulation, evaluation });
       }
 
@@ -70,13 +72,13 @@ export const createCopilotRouter = (agentService: AgentService, llmService: LlmS
 
   router.post('/agents/:id/optimize', async (req: Request, res: Response) => {
     try {
-      const { failures } = req.body;
+      const { failures, actions } = req.body;
       if (!failures?.length) {
         return res.status(400).json({ error: 'failures required in request body' });
       }
       const prompt = req.body.prompt
         || await agentService.getAgentPrompt(req.locationId!, req.params.id);
-      const result = await llmService.optimizePrompt(prompt, failures);
+      const result = await llmService.optimizePrompt(prompt, failures, actions);
       res.json(result);
     } catch (error: any) {
       logger.error({ err: error }, 'Failed to optimize prompt');

@@ -5,9 +5,21 @@ export const TranscriptMessageSchema = z.object({
   content: z.string(),
 });
 
+export const ToolCallLogEntrySchema = z.object({
+  turn: z.number(),
+  actionName: z.string(),
+  actionType: z.string(),
+  params: z.record(z.string(), z.unknown()),
+  result: z.object({
+    success: z.boolean(),
+    data: z.record(z.string(), z.unknown()),
+  }),
+});
+
 export const SimulationResultSchema = z.object({
   testCaseId: z.string(),
   transcript: z.array(TranscriptMessageSchema),
+  toolCallLog: z.array(ToolCallLogEntrySchema).optional(),
 });
 
 export const CriterionResultSchema = z.object({

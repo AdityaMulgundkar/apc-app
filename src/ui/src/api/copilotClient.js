@@ -20,10 +20,10 @@ export function getAgent(agentId) {
   return request(`/agents/${agentId}`);
 }
 
-export function generateTestCases(agentId, prompt) {
+export function generateTestCases(agentId, prompt, actions) {
   return request(`/agents/${agentId}/test`, {
     method: 'POST',
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, actions }),
   });
 }
 
@@ -34,10 +34,10 @@ export function runTests(agentId, testCases, prompt, actions) {
   });
 }
 
-export function optimizePrompt(agentId, failures, prompt) {
+export function optimizePrompt(agentId, failures, prompt, actions) {
   return request(`/agents/${agentId}/optimize`, {
     method: 'POST',
-    body: JSON.stringify({ failures, prompt }),
+    body: JSON.stringify({ failures, prompt, actions }),
   });
 }
 
