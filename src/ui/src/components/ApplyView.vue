@@ -60,32 +60,34 @@
 
     <!-- Actions -->
     <div class="apply-actions">
-      <button
+      <AppButton
         v-if="!store.applied"
-        class="apply-btn"
-        :disabled="store.loading"
+        label="Apply to Agent"
+        loadingText="Applying..."
+        :loading="store.loading"
         @click="store.applyOptimizedPrompt()"
       >
-        <svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.58-8.42a14.927 14.927 0 00-2.58 5.841m0 0a3 3 0 10-4.243 4.243" /></svg>
-        Apply to Agent
-      </button>
-      <button
+        <template #icon><svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.58-8.42a14.927 14.927 0 00-2.58 5.841m0 0a3 3 0 10-4.243 4.243" /></svg></template>
+      </AppButton>
+      <AppButton
         v-if="store.applied"
-        class="restart-btn"
+        label="Start Over"
+        variant="secondary"
         @click="store.reset()"
       >
-        <svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" /></svg>
-        Start Over
-      </button>
+        <template #icon><svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" /></svg></template>
+      </AppButton>
     </div>
   </div>
 </template>
 
 <script>
 import { useCopilotStore } from '../stores/copilotStore';
+import AppButton from './AppButton.vue';
 
 export default {
   name: 'ApplyView',
+  components: { AppButton },
   setup() {
     const store = useCopilotStore();
     return { store };
@@ -250,44 +252,6 @@ export default {
   padding: 16px 0;
   border-top: 1px solid var(--ghl-border);
   background: #fff;
-}
-.apply-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 24px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  background: var(--ghl-primary);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.apply-btn:hover {
-  background: var(--ghl-primary-hover);
-}
-.apply-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.restart-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 24px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ghl-primary);
-  background: transparent;
-  border: 1px solid var(--ghl-primary);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.restart-btn:hover {
-  background: var(--ghl-primary-light);
 }
 .btn-icon {
   width: 16px;

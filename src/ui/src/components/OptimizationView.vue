@@ -30,21 +30,21 @@
     </div>
 
     <div class="opt-actions">
-      <button
-        class="action-btn action-btn-primary"
-        :disabled="store.loading"
+      <AppButton
+        label="Re-run Failed Tests"
+        loadingText="Running..."
+        :loading="store.loading"
         @click="rerunFailed"
       >
-        <svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" /></svg>
-        Re-run Failed Tests
-      </button>
-      <button
-        class="action-btn action-btn-secondary"
-        :disabled="store.loading"
+        <template #icon><svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" /></svg></template>
+      </AppButton>
+      <AppButton
+        label="Re-run All Tests"
+        loadingText="Running..."
+        :loading="store.loading"
+        variant="secondary"
         @click="rerunAll"
-      >
-        Re-run All Tests
-      </button>
+      />
     </div>
   </div>
 </template>
@@ -52,6 +52,7 @@
 <script>
 import { useCopilotStore } from '../stores/copilotStore';
 import { diffWords } from 'diff';
+import AppButton from './AppButton.vue';
 
 function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -59,6 +60,7 @@ function escapeHtml(str) {
 
 export default {
   name: 'OptimizationView',
+  components: { AppButton },
   setup() {
     const store = useCopilotStore();
     return { store };
@@ -218,37 +220,6 @@ export default {
   padding: 16px 0;
   border-top: 1px solid var(--ghl-border);
   background: #fff;
-}
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 24px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-  border: none;
-}
-.action-btn-primary {
-  color: #fff;
-  background: var(--ghl-primary);
-}
-.action-btn-primary:hover {
-  background: var(--ghl-primary-hover);
-}
-.action-btn-secondary {
-  color: var(--ghl-primary);
-  background: transparent;
-  border: 1px solid var(--ghl-primary);
-}
-.action-btn-secondary:hover {
-  background: var(--ghl-primary-light);
-}
-.action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 .btn-icon {
   width: 16px;

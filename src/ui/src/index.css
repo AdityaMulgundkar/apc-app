@@ -1,8 +1,6 @@
-@import "tailwindcss";
-@source "./";
-@plugin "daisyui" {
-  themes: light;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --ghl-primary: rgb(56, 160, 219);

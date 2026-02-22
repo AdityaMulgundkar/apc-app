@@ -38,27 +38,27 @@
     </div>
 
     <div v-if="!store.applied" class="detail-actions">
-      <button
+      <AppButton
         v-if="!store.isTestRun(store.selectedTestIndex)"
-        class="run-btn"
-        :disabled="store.loading"
+        label="Run This Test"
+        loadingText="Running..."
+        :loading="store.loading"
         @click="store.runSingleTest(store.selectedTestIndex)"
       >
-        <svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
-        Run This Test
-      </button>
+        <template #icon><svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg></template>
+      </AppButton>
       <span v-else class="run-done" :class="store.testStatus(store.selectedTestIndex) === 'passed' ? 'run-done-pass' : 'run-done-fail'">
         {{ store.testStatus(store.selectedTestIndex) === 'passed' ? 'Passed' : 'Failed' }}
       </span>
 
-      <button
+      <AppButton
         v-if="store.remainingCount > 0"
-        class="run-btn run-btn-secondary"
-        :disabled="store.loading"
+        :label="`Run Remaining (${store.remainingCount})`"
+        loadingText="Running..."
+        :loading="store.loading"
+        variant="secondary"
         @click="store.runRemainingTests()"
-      >
-        Run Remaining ({{ store.remainingCount }})
-      </button>
+      />
     </div>
   </div>
 
@@ -69,9 +69,11 @@
 
 <script>
 import { useCopilotStore } from '../stores/copilotStore';
+import AppButton from './AppButton.vue';
 
 export default {
   name: 'TestCaseDetail',
+  components: { AppButton },
   setup() {
     const store = useCopilotStore();
     return { store };
@@ -185,35 +187,6 @@ export default {
   align-items: center;
   gap: 12px;
   padding-top: 8px;
-}
-.run-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 24px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  background: var(--ghl-primary);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.run-btn:hover {
-  background: var(--ghl-primary-hover);
-}
-.run-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.run-btn-secondary {
-  background: transparent;
-  color: var(--ghl-primary);
-  border: 1px solid var(--ghl-primary);
-}
-.run-btn-secondary:hover {
-  background: var(--ghl-primary-light);
 }
 .run-done {
   display: inline-flex;

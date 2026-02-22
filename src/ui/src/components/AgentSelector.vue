@@ -4,24 +4,24 @@
     <p class="text-sm text-base-content/60 mb-5">Choose a Voice AI agent, review its prompt, then generate test cases.</p>
 
     <div class="toolbar">
-      <select
-        class="agent-select"
-        :value="store.selectedAgentId || ''"
-        @change="onAgentChange($event.target.value)"
-      >
-        <option value="" disabled>-- Pick an agent --</option>
-        <option v-for="a in store.agents" :key="a.id" :value="a.id">{{ a.agentName }}</option>
-      </select>
+      <AppDropdown
+        :modelValue="store.selectedAgentId || ''"
+        @update:modelValue="onAgentSelect"
+        :options="agentOptions"
+        placeholder="Select an agent"
+        width="16rem"
+      />
 
-      <button
+      <AppButton
         v-if="store.agent && !store.applied"
-        class="generate-btn"
-        :disabled="store.loading || !store.editedPrompt.trim()"
+        label="Generate Test Cases"
+        loadingText="Generating..."
+        :loading="store.loading"
+        :disabled="!store.editedPrompt.trim()"
         @click="store.generateTests()"
       >
-        <svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.59.659H9.06a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V19a2 2 0 01-2 2H7a2 2 0 01-2-2v-4.5" /></svg>
-        Generate Test Cases
-      </button>
+        <template #icon><svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.59.659H9.06a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V19a2 2 0 01-2 2H7a2 2 0 01-2-2v-4.5" /></svg></template>
+      </AppButton>
     </div>
 
     <template v-if="store.agent">
@@ -67,16 +67,24 @@
 
 <script>
 import { useCopilotStore } from '../stores/copilotStore';
+import AppDropdown from './AppDropdown.vue';
+import AppButton from './AppButton.vue';
 
 export default {
   name: 'AgentSelector',
+  components: { AppDropdown, AppButton },
   setup() {
     const store = useCopilotStore();
     store.loadAgents();
     return { store };
   },
+  computed: {
+    agentOptions() {
+      return this.store.agents.map((a) => ({ value: a.id, label: a.agentName }));
+    },
+  },
   methods: {
-    onAgentChange(agentId) {
+    onAgentSelect(agentId) {
       if (agentId) {
         this.store.selectAgent(agentId);
       }
@@ -91,45 +99,6 @@ export default {
   align-items: center;
   gap: 12px;
   margin-bottom: 24px;
-}
-.agent-select {
-  appearance: auto;
-  padding: 8px 12px;
-  font-size: 14px;
-  border: 1px solid var(--ghl-border);
-  border-radius: 8px;
-  background: #fff;
-  min-width: 250px;
-  height: 40px;
-  color: var(--ghl-text);
-}
-.agent-select:focus {
-  outline: 2px solid var(--ghl-primary);
-  outline-offset: 1px;
-  border-color: var(--ghl-primary);
-}
-.generate-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  background: var(--ghl-primary);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  height: 40px;
-  white-space: nowrap;
-  transition: background 0.15s;
-}
-.generate-btn:hover {
-  background: var(--ghl-primary-hover);
-}
-.generate-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 .btn-icon {
   width: 16px;

@@ -24,7 +24,7 @@
           <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" v-html="s.iconPath"></svg>
           <span v-show="sidebarExpanded" class="text-sm">{{ s.label }}</span>
           <svg
-            v-if="sidebarExpanded && store.canAccessStep(s.id) && s.id !== store.step"
+            v-if="sidebarExpanded && store.canAccessStep(s.id)"
             class="ml-auto w-4 h-4 opacity-40"
             fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
           ><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
@@ -54,10 +54,6 @@
 
       <!-- Right / Main Panel -->
       <div class="flex-1 overflow-y-auto p-6 relative">
-        <div v-if="store.loading" class="absolute inset-0 flex items-center justify-center bg-base-100/80 z-10">
-          <span class="loading loading-spinner loading-lg text-primary"></span>
-        </div>
-
         <div v-if="store.error" class="alert alert-error shadow-sm mb-4">
           <span>{{ store.error }}</span>
           <button class="btn btn-sm btn-ghost" @click="store.error = null">✕</button>

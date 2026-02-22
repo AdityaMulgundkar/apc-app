@@ -50,14 +50,14 @@
     </div>
 
     <div v-if="store.failedTests.length > 0 && !store.resultsAreStale && !store.applied" class="conv-actions">
-      <button
-        class="optimize-btn"
-        :disabled="store.loading"
+      <AppButton
+        label="Optimize Prompt"
+        loadingText="Optimizing..."
+        :loading="store.loading"
         @click="store.optimize()"
       >
-        <svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
-        Optimize Prompt
-      </button>
+        <template #icon><svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg></template>
+      </AppButton>
     </div>
   </div>
 
@@ -68,9 +68,11 @@
 
 <script>
 import { useCopilotStore } from '../stores/copilotStore';
+import AppButton from './AppButton.vue';
 
 export default {
   name: 'ConversationView',
+  components: { AppButton },
   setup() {
     const store = useCopilotStore();
     return { store };
@@ -253,27 +255,6 @@ export default {
   padding: 16px 0;
   border-top: 1px solid var(--ghl-border);
   background: #fff;
-}
-.optimize-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 24px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  background: var(--ghl-primary);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.optimize-btn:hover {
-  background: var(--ghl-primary-hover);
-}
-.optimize-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 .btn-icon {
   width: 16px;
