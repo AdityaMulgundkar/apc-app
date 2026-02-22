@@ -27,10 +27,10 @@ export function generateTestCases(agentId, prompt) {
   });
 }
 
-export function runTests(agentId, testCases, prompt) {
+export function runTests(agentId, testCases, prompt, actions) {
   return request(`/agents/${agentId}/run`, {
     method: 'POST',
-    body: JSON.stringify({ testCases, prompt }),
+    body: JSON.stringify({ testCases, prompt, actions }),
   });
 }
 

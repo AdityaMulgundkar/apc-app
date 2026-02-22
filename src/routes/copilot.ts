@@ -40,7 +40,7 @@ export const createCopilotRouter = (agentService: AgentService, llmService: LlmS
 
   router.post('/agents/:id/run', async (req: Request, res: Response) => {
     try {
-      const { testCases } = req.body;
+      const { testCases, actions } = req.body;
       if (!testCases?.length) {
         return res.status(400).json({ error: 'testCases required in request body' });
       }
@@ -49,7 +49,7 @@ export const createCopilotRouter = (agentService: AgentService, llmService: LlmS
 
       const results = [];
       for (const tc of testCases) {
-        const simulation = await llmService.simulateConversation(prompt, tc);
+        const simulation = await llmService.simulateConversation(prompt, tc, actions);
         const evaluation = await llmService.evaluateTranscript(prompt, tc, simulation);
         results.push({ simulation, evaluation });
       }

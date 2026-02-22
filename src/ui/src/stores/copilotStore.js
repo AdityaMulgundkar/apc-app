@@ -161,7 +161,7 @@ export const useCopilotStore = defineStore('copilot', {
       this.error = null;
       try {
         const tc = this.testCases[index];
-        const response = await api.runTests(this.selectedAgentId, [tc], this.currentPrompt);
+        const response = await api.runTests(this.selectedAgentId, [tc], this.currentPrompt, this.agent?.actions);
         this.testResults[index] = response.results[0];
         this.promptSnapshotAtRun = this.currentPrompt;
         this._snapshotBaseline();
@@ -184,6 +184,7 @@ export const useCopilotStore = defineStore('copilot', {
           this.selectedAgentId,
           pending.map(({ tc }) => tc),
           this.currentPrompt,
+          this.agent?.actions,
         );
         pending.forEach(({ i }, j) => {
           this.testResults[i] = response.results[j];

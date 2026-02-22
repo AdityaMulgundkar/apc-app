@@ -44,6 +44,23 @@
           Prompt modified from original
         </div>
       </div>
+
+      <div class="tools-section" v-if="store.agent.actions && store.agent.actions.length">
+        <h3 class="tools-title">
+          <svg class="tools-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17l-5.1 5.1a2.121 2.121 0 01-3-3l5.1-5.1m0 0L3.34 8.09a1.5 1.5 0 010-2.12l.88-.88a1.5 1.5 0 012.12 0l4.08 4.08m0 0l1.415-1.414a2.121 2.121 0 013 0l.708.707a2.121 2.121 0 010 3l-1.415 1.414m0 0l4.08 4.08a1.5 1.5 0 010 2.12l-.88.88a1.5 1.5 0 01-2.12 0l-4.08-4.08" /></svg>
+          Configured Tools ({{ store.agent.actions.length }})
+        </h3>
+        <div class="tools-list">
+          <div v-for="action in store.agent.actions" :key="action.id" class="tool-card">
+            <div class="tool-name">{{ action.name }}</div>
+            <span class="tool-type">{{ action.actionType.replace(/_/g, ' ') }}</span>
+            <p v-if="action.actionParameters?.description" class="tool-desc">{{ action.actionParameters.description }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="tools-section" v-else-if="store.agent">
+        <p class="no-tools">No tools configured on this agent.</p>
+      </div>
     </template>
   </div>
 </template>
@@ -163,5 +180,59 @@ export default {
   gap: 6px;
   font-size: 12px;
   color: var(--ghl-warning);
+}
+.tools-section {
+  margin-top: 20px;
+}
+.tools-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ghl-text);
+  margin: 0 0 10px;
+}
+.tools-icon {
+  width: 16px;
+  height: 16px;
+}
+.tools-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.tool-card {
+  padding: 10px 14px;
+  border: 1px solid var(--ghl-border);
+  border-radius: 8px;
+  background: #fff;
+  min-width: 200px;
+}
+.tool-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ghl-text);
+  margin-bottom: 4px;
+}
+.tool-type {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ghl-primary);
+  background: var(--ghl-primary-light);
+  border-radius: 4px;
+  padding: 2px 8px;
+  text-transform: lowercase;
+}
+.tool-desc {
+  font-size: 12px;
+  color: var(--ghl-text-muted);
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+.no-tools {
+  font-size: 13px;
+  color: var(--ghl-text-muted);
+  margin: 0;
 }
 </style>
