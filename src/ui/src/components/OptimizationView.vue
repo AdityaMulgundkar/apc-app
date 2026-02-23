@@ -21,13 +21,17 @@
     </div>
 
     <div class="flex gap-4 mb-6">
-      <div class="flex-1 min-w-0">
-        <div class="text-xs font-semibold uppercase tracking-wide px-3 py-1.5 rounded-t-lg bg-error/10 text-error">Original</div>
-        <pre class="diff-content" v-html="originalHtml"></pre>
+      <div class="card card-bordered card-compact flex-1 min-w-0 bg-base-100">
+        <div class="card-body p-0">
+          <div class="text-xs font-semibold uppercase tracking-wide px-4 py-2 border-b border-base-300 text-error">Original</div>
+          <div class="font-mono text-[13px] leading-relaxed p-4 whitespace-pre-wrap break-words max-h-[500px] overflow-y-auto" ref="originalPre" @scroll="syncScroll('original')" v-html="originalHtml"></div>
+        </div>
       </div>
-      <div class="flex-1 min-w-0">
-        <div class="text-xs font-semibold uppercase tracking-wide px-3 py-1.5 rounded-t-lg bg-success/10 text-success">Optimized</div>
-        <pre class="diff-content" v-html="optimizedHtml"></pre>
+      <div class="card card-bordered card-compact flex-1 min-w-0 bg-base-100">
+        <div class="card-body p-0">
+          <div class="text-xs font-semibold uppercase tracking-wide px-4 py-2 border-b border-base-300 text-success">Optimized</div>
+          <div class="font-mono text-[13px] leading-relaxed p-4 whitespace-pre-wrap break-words max-h-[500px] overflow-y-auto" ref="optimizedPre" @scroll="syncScroll('optimized')" v-html="optimizedHtml"></div>
+        </div>
       </div>
     </div>
 
@@ -65,15 +69,28 @@ export default {
     const store = useCopilotStore();
     return { store };
   },
+  data() {
+    return { syncing: false };
+  },
   methods: {
-    rerunFailed() {
-      this.store.step = 'test';
-      this.$nextTick(() => this.store.runRemainingTests());
+    syncScroll(source) {
+      if (this.syncing) return;
+      this.syncing = true;
+      const from = source === 'original' ? this.$refs.originalPre : this.$refs.optimizedPre;
+      const to = source === 'original' ? this.$refs.optimizedPre : this.$refs.originalPre;
+      if (from && to) {
+        to.scrollTop = from.scrollTop;
+      }
+      this.$nextTick(() => { this.syncing = false; });
     },
-    rerunAll() {
+    async rerunFailed() {
+      await this.store.runFailedTests();
+      this.store.step = 'results';
+    },
+    async rerunAll() {
       this.store.testResults = new Array(this.store.testCases.length).fill(null);
-      this.store.step = 'test';
-      this.$nextTick(() => this.store.runRemainingTests());
+      await this.store.runRemainingTests();
+      this.store.step = 'results';
     },
   },
   computed: {
@@ -107,31 +124,16 @@ export default {
 </script>
 
 <style scoped>
-.diff-content {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  background: oklch(var(--b2));
-  border: 1px solid oklch(var(--b3));
-  border-top: none;
-  border-radius: 0 0 6px 6px;
-  padding: 14px;
-  margin: 0;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  max-height: 500px;
-  overflow-y: auto;
-}
-.diff-content :deep(.diff-removed) {
-  background: rgba(220, 38, 38, 0.15);
-  color: #991b1b;
+:deep(.diff-removed) {
+  background: oklch(var(--er) / 0.15);
+  color: oklch(var(--er));
   text-decoration: line-through;
   border-radius: 2px;
   padding: 0 2px;
 }
-.diff-content :deep(.diff-added) {
-  background: rgba(22, 163, 74, 0.15);
-  color: #166534;
+:deep(.diff-added) {
+  background: oklch(var(--su) / 0.15);
+  color: oklch(var(--su));
   border-radius: 2px;
   padding: 0 2px;
 }

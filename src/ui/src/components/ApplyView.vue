@@ -1,7 +1,8 @@
 <template>
-  <div class="max-w-[600px]">
+  <div>
     <div class="flex items-center gap-4 mb-7">
       <h2 class="text-xl font-semibold m-0">{{ store.applied ? 'Prompt Applied' : 'Review & Apply' }}</h2>
+      <span class="badge badge-primary badge-sm px-2.5">{{ store.testCases.length }} tests</span>
       <StatusBadge v-if="store.applied" status="passed" label="Applied" />
     </div>
 
@@ -35,8 +36,10 @@
         <tbody>
           <tr v-for="row in store.perTestComparison" :key="row.id">
             <td>
-              <span class="text-xs font-bold text-primary uppercase mr-2">{{ row.id }}</span>
-              <span class="text-xs truncate">{{ row.scenario }}</span>
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-xs font-bold text-primary uppercase flex-shrink-0">{{ row.id }}</span>
+                <span class="text-xs truncate">{{ row.scenario }}</span>
+              </div>
             </td>
             <td class="text-center">
               <span v-if="row.baselinePassed === null" class="text-sm font-bold text-base-content/40">—</span>

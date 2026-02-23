@@ -2,11 +2,14 @@
   <div class="flex flex-col h-full bg-base-100">
     <div class="flex items-center justify-between px-5 py-4 border-b border-base-300">
       <h3 class="text-sm font-semibold">Results</h3>
-      <span
-        v-if="store.passRate !== null"
-        class="badge badge-sm px-2.5"
-        :class="store.passRate >= 70 ? 'badge-success' : 'badge-error'"
-      >{{ store.passRate }}%</span>
+      <div class="flex items-center gap-1.5">
+        <span class="badge badge-primary badge-sm px-2.5">{{ store.testCases.length }}</span>
+        <span
+          v-if="store.passRate !== null"
+          class="badge badge-sm px-2.5"
+          :class="store.passRate >= 70 ? 'badge-success' : 'badge-error'"
+        >{{ store.passRate }}%</span>
+      </div>
     </div>
 
     <ul class="flex-1 overflow-y-auto list-none m-0 p-0">

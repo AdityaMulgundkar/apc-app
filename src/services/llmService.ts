@@ -37,8 +37,8 @@ export class LlmService {
     this.conversationSimulator = new ConversationSimulator(new MockToolExecutor());
   }
 
-  async generateTestCases(agentPrompt: string, actions?: AgentAction[]): Promise<TestGenerationResult> {
-    logger.info('Generating test cases');
+  async generateTestCases(agentPrompt: string, actions?: AgentAction[], count: number = 5): Promise<TestGenerationResult> {
+    logger.info({ requestedCount: count }, 'Generating test cases');
     const prompt = ChatPromptTemplate.fromTemplate(this.generatePromptTemplate);
     const model = createModel().withStructuredOutput(TestGenerationResultSchema);
     const chain = prompt.pipe(model);
@@ -50,7 +50,7 @@ export class LlmService {
         }).join('\n')
       : 'No tools configured for this agent.';
 
-    const result = await chain.invoke({ agentPrompt, availableTools });
+    const result = await chain.invoke({ agentPrompt, availableTools, testCount: String(count) });
     logger.info({ count: result.testCases.length }, 'Test cases generated');
     return result;
   }
@@ -120,7 +120,7 @@ export class LlmService {
           .join('\n')
       : 'No tool calls were made during this conversation.';
 
-    return chain.invoke({
+    const result = await chain.invoke({
       agentPrompt,
       scenario: testCase.scenario,
       callerPersona: testCase.callerPersona,
@@ -131,6 +131,19 @@ export class LlmService {
       availableTools,
       toolCallLog,
     });
+
+    const computedPass = result.criterionResults.every((cr) => cr.passed);
+    logger.info({
+      testCaseId: testCase.id,
+      llmOverallPass: result.overallPass,
+      computedOverallPass: computedPass,
+      criteria: result.criterionResults.map((cr) => ({ id: cr.criterionId, passed: cr.passed })),
+    }, 'Evaluation result');
+
+    return {
+      ...result,
+      overallPass: computedPass,
+    };
   }
 
   async optimizePrompt(agentPrompt: string, failures: TestResult[], actions?: AgentAction[]): Promise<OptimizationResult> {

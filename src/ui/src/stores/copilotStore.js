@@ -12,6 +12,7 @@ export const useCopilotStore = defineStore('copilot', {
     originalPrompt: '',
     editedPrompt: '',
 
+    testCount: 5,
     testCases: [],
     testResults: [],        // same length as testCases, null = not run
     baselineResults: [],    // snapshot of first complete run
@@ -130,11 +131,12 @@ export const useCopilotStore = defineStore('copilot', {
       this.editedPrompt = value;
     },
 
-    async generateTests() {
+    async generateTests(count = 5) {
+      this.testCount = Math.max(1, Math.min(20, Math.round(count)));
       this.loading = true;
       this.error = null;
       try {
-        const result = await api.generateTestCases(this.selectedAgentId, this.currentPrompt, this.agent?.actions);
+        const result = await api.generateTestCases(this.selectedAgentId, this.currentPrompt, this.agent?.actions, this.testCount);
         this.testCases = result.testCases || [];
         this.testResults = new Array(this.testCases.length).fill(null);
         this.baselineResults = [];
@@ -162,6 +164,35 @@ export const useCopilotStore = defineStore('copilot', {
         const tc = this.testCases[index];
         const response = await api.runTests(this.selectedAgentId, [tc], this.currentPrompt, this.agent?.actions);
         this.testResults[index] = response.results[0];
+        this.promptSnapshotAtRun = this.currentPrompt;
+        this._snapshotBaseline();
+      } catch (err) {
+        this.error = err.message;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async runFailedTests() {
+      const failed = this.testCases
+        .map((tc, i) => ({ tc, i }))
+        .filter(({ i }) => {
+          const r = this.testResults[i];
+          return r !== null && !r.evaluation.overallPass;
+        });
+      if (!failed.length) return;
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await api.runTests(
+          this.selectedAgentId,
+          failed.map(({ tc }) => tc),
+          this.currentPrompt,
+          this.agent?.actions,
+        );
+        failed.forEach(({ i }, j) => {
+          this.testResults[i] = response.results[j];
+        });
         this.promptSnapshotAtRun = this.currentPrompt;
         this._snapshotBaseline();
       } catch (err) {
@@ -204,9 +235,6 @@ export const useCopilotStore = defineStore('copilot', {
         this.optimization = await api.optimizePrompt(this.selectedAgentId, this.failedTests, this.currentPrompt, this.agent?.actions);
         this.editedPrompt = this.optimization.optimizedPrompt;
         this.iterationCount++;
-        this.testResults = this.testResults.map((r) =>
-          r !== null && !r.evaluation.overallPass ? null : r
-        );
         this.step = 'optimize';
       } catch (err) {
         this.error = err.message;

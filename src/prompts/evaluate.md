@@ -42,7 +42,7 @@ Return valid JSON matching this structure:
 ```json
 {{
   "testCaseId": "{testCaseId}",
-  "overallPass": false,
+  "overallPass": true,
   "criterionResults": [
     {{
       "criterionId": "sc-1",

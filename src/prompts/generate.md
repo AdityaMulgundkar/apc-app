@@ -10,7 +10,7 @@ You are a QA engineer specializing in voice AI agents. Given an agent's prompt, 
 
 ## Instructions
 
-Analyze the agent prompt and generate 3-5 test cases. Each test case should:
+Analyze the agent prompt and generate exactly {testCount} test cases. Each test case should:
 - Target a distinct scenario the agent should handle based on its prompt
 - Include a realistic caller persona with a specific goal
 - Define clear, measurable success criteria

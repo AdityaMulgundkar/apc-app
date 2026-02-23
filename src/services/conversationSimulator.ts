@@ -86,6 +86,11 @@ export class ConversationSimulator {
             .map((b) => b.text)
             .join('');
 
+      if (!callerText.trim()) {
+        logger.info({ turn: turnCount }, 'Caller returned empty response, ending simulation');
+        break;
+      }
+
       transcript.push({ role: 'caller', content: callerText });
       callerMessages.push(new AIMessage(callerText));
       agentMessages.push(new HumanMessage(callerText));
@@ -139,6 +144,11 @@ export class ConversationSimulator {
               .join('');
       }
 
+      if (!resolvedAgentText.trim()) {
+        logger.info({ turn: turnCount }, 'Agent returned empty response, ending simulation');
+        break;
+      }
+
       transcript.push({ role: 'agent', content: resolvedAgentText });
       callerMessages.push(new HumanMessage(resolvedAgentText));
 
@@ -150,9 +160,11 @@ export class ConversationSimulator {
 
     logger.info({ testCaseId: testCase.id, turns: turnCount, toolCalls: toolCallLog.length }, 'Simulation complete');
 
+    const cleanedTranscript = this.cleanTranscript(transcript);
+
     return {
       testCaseId: testCase.id,
-      transcript,
+      transcript: cleanedTranscript,
       toolCallLog,
     };
   }
@@ -211,6 +223,23 @@ export class ConversationSimulator {
     return this.callerPromptTemplate
       .replace('{callerPersona}', testCase.callerPersona)
       .replace('{callerGoal}', testCase.callerGoal);
+  }
+
+  private cleanTranscript(transcript: TranscriptMessage[]): TranscriptMessage[] {
+    const systemTokens = /<<[A-Z_]+>>/g;
+    const trailingSeparator = /\s*---\s*[\s\S]*$/;
+    const bracketedMeta = /\*{0,2}\[(Farewell|Conversation\s*(concluded|Complete|ended)|Goal\s*(achieved|has been))[\s\S]*?\]\*{0,2}/gi;
+
+    return transcript
+      .map((msg) => {
+        let content = msg.content;
+        content = content.replace(systemTokens, '');
+        content = content.replace(trailingSeparator, '');
+        content = content.replace(bracketedMeta, '');
+        content = content.replace(/\n{3,}/g, '\n\n').trim();
+        return { ...msg, content };
+      })
+      .filter((msg) => msg.content.length > 0);
   }
 
   private isGoodbye(text: string): boolean {

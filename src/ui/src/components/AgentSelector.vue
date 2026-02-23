@@ -12,14 +12,25 @@
         width="16rem"
       />
 
-      <AppButton
-        v-if="store.agent && !store.applied"
-        label="Generate Test Cases"
-        loadingText="Generating..."
-        :loading="store.loading"
-        :disabled="!store.editedPrompt.trim()"
-        @click="store.generateTests()"
-      />
+      <template v-if="store.agent && !store.applied">
+        <label class="flex items-center gap-2">
+          <span class="text-sm text-base-content/60">Tests:</span>
+          <input
+            type="number"
+            class="input input-bordered w-20 text-center text-sm"
+            v-model.number="store.testCount"
+            min="1"
+            max="20"
+          />
+        </label>
+        <AppButton
+          label="Generate Test Cases"
+          loadingText="Generating..."
+          :loading="store.loading"
+          :disabled="!store.editedPrompt.trim()"
+          @click="store.generateTests(store.testCount)"
+        />
+      </template>
     </div>
 
     <template v-if="store.agent">
