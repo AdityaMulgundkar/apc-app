@@ -19,9 +19,7 @@
         :loading="store.loading"
         :disabled="!store.editedPrompt.trim()"
         @click="store.generateTests()"
-      >
-        <template #icon><svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.59.659H9.06a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V19a2 2 0 01-2 2H7a2 2 0 01-2-2v-4.5" /></svg></template>
-      </AppButton>
+      />
     </div>
 
     <template v-if="store.agent">
@@ -31,7 +29,7 @@
       </div>
 
       <textarea
-        class="prompt-textarea"
+        class="textarea textarea-bordered w-full font-mono text-sm leading-relaxed"
         rows="18"
         :value="store.editedPrompt"
         :disabled="store.applied"
@@ -50,11 +48,13 @@
           <svg class="tools-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17l-5.1 5.1a2.121 2.121 0 01-3-3l5.1-5.1m0 0L3.34 8.09a1.5 1.5 0 010-2.12l.88-.88a1.5 1.5 0 012.12 0l4.08 4.08m0 0l1.415-1.414a2.121 2.121 0 013 0l.708.707a2.121 2.121 0 010 3l-1.415 1.414m0 0l4.08 4.08a1.5 1.5 0 010 2.12l-.88.88a1.5 1.5 0 01-2.12 0l-4.08-4.08" /></svg>
           Configured Tools ({{ store.agent.actions.length }})
         </h3>
-        <div class="tools-list">
-          <div v-for="action in store.agent.actions" :key="action.id" class="tool-card">
-            <div class="tool-name">{{ action.name }}</div>
-            <span class="tool-type">{{ action.actionType.replace(/_/g, ' ') }}</span>
-            <p v-if="action.actionParameters?.description" class="tool-desc">{{ action.actionParameters.description }}</p>
+        <div class="flex flex-wrap gap-2">
+          <div v-for="action in store.agent.actions" :key="action.id" class="border border-base-300 rounded-lg px-3 py-2 bg-base-100 min-w-[180px]">
+            <div class="flex items-center gap-2 mb-0.5">
+              <span class="text-sm font-semibold">{{ action.name }}</span>
+              <span class="badge badge-primary badge-sm lowercase">{{ action.actionType.replace(/_/g, ' ') }}</span>
+            </div>
+            <p v-if="action.actionParameters?.description" class="text-xs text-base-content/50 leading-snug m-0">{{ action.actionParameters.description }}</p>
           </div>
         </div>
       </div>
@@ -100,11 +100,6 @@ export default {
   gap: 12px;
   margin-bottom: 24px;
 }
-.btn-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
 .prompt-header {
   display: flex;
   align-items: center;
@@ -119,25 +114,6 @@ export default {
 .prompt-meta {
   font-size: 12px;
   color: var(--ghl-text-muted);
-}
-.prompt-textarea {
-  width: 100%;
-  padding: 16px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  border: 1px solid var(--ghl-border);
-  border-radius: 8px;
-  background: var(--ghl-bg-subtle);
-  color: var(--ghl-text);
-  resize: vertical;
-  box-sizing: border-box;
-}
-.prompt-textarea:focus {
-  outline: 2px solid var(--ghl-primary);
-  outline-offset: 1px;
-  border-color: var(--ghl-primary);
-  background: #fff;
 }
 .indicator-row {
   height: 24px;
@@ -165,39 +141,6 @@ export default {
 .tools-icon {
   width: 16px;
   height: 16px;
-}
-.tools-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.tool-card {
-  padding: 10px 14px;
-  border: 1px solid var(--ghl-border);
-  border-radius: 8px;
-  background: #fff;
-  min-width: 200px;
-}
-.tool-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ghl-text);
-  margin-bottom: 4px;
-}
-.tool-type {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--ghl-primary);
-  background: var(--ghl-primary-light);
-  border-radius: 4px;
-  padding: 2px 8px;
-  text-transform: lowercase;
-}
-.tool-desc {
-  font-size: 12px;
-  color: var(--ghl-text-muted);
-  margin: 6px 0 0;
-  line-height: 1.4;
 }
 .no-tools {
   font-size: 13px;
