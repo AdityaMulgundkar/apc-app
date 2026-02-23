@@ -73,12 +73,11 @@
 <script>
 import { useCopilotStore } from '../stores/copilotStore';
 import AppButton from './AppButton.vue';
-import StatusBadge from './StatusBadge.vue';
 import EmptyState from './EmptyState.vue';
 
 export default {
   name: 'TestCaseDetail',
-  components: { AppButton, StatusBadge, EmptyState },
+  components: { AppButton, EmptyState },
   setup() {
     const store = useCopilotStore();
     return { store };

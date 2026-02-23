@@ -35,11 +35,3 @@ export default {
   },
 };
 </script>
-
-<style>
-html, body, #app {
-  height: 100%;
-  margin: 0;
-  font-family: 'Inter var', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-</style>

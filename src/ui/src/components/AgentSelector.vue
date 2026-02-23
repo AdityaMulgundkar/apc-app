@@ -3,7 +3,7 @@
     <h2 class="text-2xl font-bold mb-1">Select & Review Agent</h2>
     <p class="text-sm text-base-content/60 mb-5">Choose a Voice AI agent, review its prompt, then generate test cases.</p>
 
-    <div class="toolbar">
+    <div class="flex items-center gap-3 mb-6">
       <AppDropdown
         :modelValue="store.selectedAgentId || ''"
         @update:modelValue="onAgentSelect"
@@ -34,9 +34,9 @@
     </div>
 
     <template v-if="store.agent">
-      <div class="prompt-header">
-        <h3 class="prompt-title">Agent Prompt</h3>
-        <span class="prompt-meta">{{ store.agent.businessName }} &middot; {{ store.agent.language || 'en-US' }}</span>
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold">Agent Prompt</h3>
+        <span class="text-xs text-base-content/50">{{ store.agent.businessName }} &middot; {{ store.agent.language || 'en-US' }}</span>
       </div>
 
       <textarea
@@ -47,16 +47,16 @@
         @input="store.updateEditedPrompt($event.target.value)"
       ></textarea>
 
-      <div class="indicator-row">
-        <div v-if="store.promptModified" class="modified-indicator">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+      <div class="h-6 mt-1">
+        <div v-if="store.promptModified" class="flex items-center gap-1.5 text-xs text-warning">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
           Prompt modified from original
         </div>
       </div>
 
-      <div class="tools-section" v-if="store.agent.actions && store.agent.actions.length">
-        <h3 class="tools-title">
-          <svg class="tools-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17l-5.1 5.1a2.121 2.121 0 01-3-3l5.1-5.1m0 0L3.34 8.09a1.5 1.5 0 010-2.12l.88-.88a1.5 1.5 0 012.12 0l4.08 4.08m0 0l1.415-1.414a2.121 2.121 0 013 0l.708.707a2.121 2.121 0 010 3l-1.415 1.414m0 0l4.08 4.08a1.5 1.5 0 010 2.12l-.88.88a1.5 1.5 0 01-2.12 0l-4.08-4.08" /></svg>
+      <div class="mt-5" v-if="store.agent.actions && store.agent.actions.length">
+        <h3 class="flex items-center gap-1.5 text-sm font-semibold mb-2.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17l-5.1 5.1a2.121 2.121 0 01-3-3l5.1-5.1m0 0L3.34 8.09a1.5 1.5 0 010-2.12l.88-.88a1.5 1.5 0 012.12 0l4.08 4.08m0 0l1.415-1.414a2.121 2.121 0 013 0l.708.707a2.121 2.121 0 010 3l-1.415 1.414m0 0l4.08 4.08a1.5 1.5 0 010 2.12l-.88.88a1.5 1.5 0 01-2.12 0l-4.08-4.08" /></svg>
           Configured Tools ({{ store.agent.actions.length }})
         </h3>
         <div class="flex flex-wrap gap-2">
@@ -69,8 +69,8 @@
           </div>
         </div>
       </div>
-      <div class="tools-section" v-else-if="store.agent">
-        <p class="no-tools">No tools configured on this agent.</p>
+      <div class="mt-5" v-else-if="store.agent">
+        <p class="text-[13px] text-base-content/50 m-0">No tools configured on this agent.</p>
       </div>
     </template>
   </div>
@@ -103,59 +103,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-.prompt-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-.prompt-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--ghl-text);
-}
-.prompt-meta {
-  font-size: 12px;
-  color: var(--ghl-text-muted);
-}
-.indicator-row {
-  height: 24px;
-  margin-top: 4px;
-}
-.modified-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--ghl-warning);
-}
-.tools-section {
-  margin-top: 20px;
-}
-.tools-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ghl-text);
-  margin: 0 0 10px;
-}
-.tools-icon {
-  width: 16px;
-  height: 16px;
-}
-.no-tools {
-  font-size: 13px;
-  color: var(--ghl-text-muted);
-  margin: 0;
-}
-</style>
