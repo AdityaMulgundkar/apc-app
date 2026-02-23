@@ -1,30 +1,42 @@
 <template>
-  <div class="flex flex-col h-full">
-    <div class="panel-header">
-      <h3 class="panel-title">Results</h3>
-      <span v-if="store.passRate !== null" class="panel-badge" :class="store.passRate >= 70 ? 'badge-pass' : 'badge-fail'">
-        {{ store.passRate }}%
-      </span>
+  <div class="flex flex-col h-full bg-base-100">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-base-300">
+      <h3 class="text-sm font-semibold">Results</h3>
+      <span
+        v-if="store.passRate !== null"
+        class="badge badge-sm px-2.5"
+        :class="store.passRate >= 70 ? 'badge-success' : 'badge-error'"
+      >{{ store.passRate }}%</span>
     </div>
 
-    <ul class="flex-1 overflow-y-auto">
+    <ul class="flex-1 overflow-y-auto list-none m-0 p-0">
       <li
         v-for="(tc, i) in store.testCases"
         :key="tc.id"
-        class="result-item"
-        :class="{
-          'result-item-active': i === store.selectedTestIndex,
-          'result-item-disabled': !store.isTestRun(i),
-        }"
+        class="border-b border-base-300 transition-colors"
+        :class="[
+          i === store.selectedTestIndex
+            ? 'bg-primary/10'
+            : '',
+          store.isTestRun(i) ? 'cursor-pointer hover:bg-primary/5' : 'opacity-40 cursor-not-allowed',
+        ]"
         @click="store.isTestRun(i) && store.selectTest(i)"
       >
-        <div class="flex items-center gap-2">
-          <span v-if="!store.isTestRun(i)" class="status-icon status-pending">—</span>
-          <svg v-else-if="store.testStatus(i) === 'passed'" class="status-icon status-pass" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-          <svg v-else class="status-icon status-fail" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        <div
+          class="flex items-center gap-3 py-3.5 px-5"
+        >
+          <div v-if="!store.isTestRun(i)" class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+            <span class="text-base-content/30 font-bold">—</span>
+          </div>
+          <div v-else-if="store.testStatus(i) === 'passed'" class="w-5 h-5 rounded-full bg-success/15 flex items-center justify-center flex-shrink-0">
+            <svg class="w-3 h-3 text-success" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+          </div>
+          <div v-else class="w-5 h-5 rounded-full bg-error/15 flex items-center justify-center flex-shrink-0">
+            <svg class="w-3 h-3 text-error" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </div>
           <div class="flex-1 min-w-0">
-            <span class="result-id">{{ tc.id }}</span>
-            <p class="result-scenario">{{ tc.scenario }}</p>
+            <span class="text-xs font-extrabold text-primary">{{ tc.id }}</span>
+            <p class="text-[12px] font-medium leading-snug mt-0.5 m-0 line-clamp-2">{{ tc.scenario }}</p>
           </div>
         </div>
       </li>
@@ -43,84 +55,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  border-bottom: 1px solid var(--ghl-border);
-}
-.panel-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ghl-text);
-}
-.panel-badge {
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 10px;
-  padding: 2px 10px;
-}
-.badge-pass {
-  background: rgba(22, 163, 74, 0.1);
-  color: #16a34a;
-}
-.badge-fail {
-  background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
-}
-.result-item {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--ghl-border);
-  cursor: pointer;
-  transition: background 0.1s;
-}
-.result-item:hover:not(.result-item-disabled) {
-  background: var(--ghl-primary-light);
-}
-.result-item-active {
-  background: var(--ghl-primary-light);
-  border-left: 3px solid var(--ghl-primary);
-  padding-left: 13px;
-}
-.result-item-disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.status-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-.status-pending {
-  color: var(--ghl-text-muted);
-  font-size: 14px;
-  font-weight: 700;
-  text-align: center;
-  line-height: 16px;
-}
-.status-pass {
-  color: #16a34a;
-}
-.status-fail {
-  color: #dc2626;
-}
-.result-id {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--ghl-primary);
-  text-transform: uppercase;
-}
-.result-scenario {
-  font-size: 12px;
-  color: var(--ghl-text);
-  margin: 2px 0 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-</style>
