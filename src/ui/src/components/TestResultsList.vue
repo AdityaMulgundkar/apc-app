@@ -25,22 +25,21 @@
         ]"
         @click="store.isTestRun(i) && store.selectTest(i)"
       >
-        <div
-          class="flex items-center gap-3 py-3.5 px-5"
-        >
-          <div v-if="!store.isTestRun(i)" class="w-5 h-5 flex items-center justify-center flex-shrink-0">
-            <span class="text-base-content/30 font-bold">—</span>
-          </div>
-          <div v-else-if="store.testStatus(i) === 'passed'" class="w-5 h-5 rounded-full bg-success/15 flex items-center justify-center flex-shrink-0">
-            <svg class="w-3 h-3 text-success" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-          </div>
-          <div v-else class="w-5 h-5 rounded-full bg-error/15 flex items-center justify-center flex-shrink-0">
-            <svg class="w-3 h-3 text-error" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-          </div>
-          <div class="flex-1 min-w-0">
+        <div class="py-3.5 px-5">
+          <div class="flex items-center gap-2 mb-2">
+            <span
+              class="w-2.5 h-2.5 rounded-full flex-shrink-0"
+              :class="{
+                'border-2 border-base-content/20': !store.isTestRun(i),
+                'bg-success': store.testStatus(i) === 'passed',
+                'bg-error': store.testStatus(i) === 'failed',
+              }"
+            ></span>
             <span class="text-xs font-extrabold text-primary">{{ tc.id }}</span>
-            <p class="text-[12px] font-medium leading-snug mt-0.5 m-0 line-clamp-2">{{ tc.scenario }}</p>
+            <span class="badge badge-primary badge-outline badge-sm px-2.5 ml-auto">{{ tc.successCriteria?.length || 0 }} criteria</span>
           </div>
+          <p class="text-[13px] font-medium leading-snug m-0 line-clamp-2">{{ tc.scenario }}</p>
+          <p class="text-[11px] text-base-content/40 mt-1.5 m-0">{{ tc.callerPersona }}</p>
         </div>
       </li>
     </ul>

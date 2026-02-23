@@ -6,7 +6,7 @@
     </div>
 
     <div class="flex gap-4 mb-6">
-      <div class="card card-bordered card-compact bg-base-200 flex-1">
+      <div class="card card-bordered card-compact bg-base-100 flex-1">
         <div class="card-body p-3.5">
           <div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-1">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
@@ -16,7 +16,7 @@
         </div>
       </div>
 
-      <div class="card card-bordered card-compact bg-base-200 flex-1">
+      <div class="card card-bordered card-compact bg-base-100 flex-1">
         <div class="card-body p-3.5">
           <div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-1">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0l2.77-.693a9 9 0 016.208.682l.108.054a9 9 0 006.086.71l3.114-.732a48.524 48.524 0 01-.005-10.499l-3.11.732a9 9 0 01-6.085-.711l-.108-.054a9 9 0 00-6.208-.682L3 4.5M3 15V4.5" /></svg>

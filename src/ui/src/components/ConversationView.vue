@@ -8,7 +8,7 @@
     <div class="flex items-start justify-between mb-6">
       <div>
         <span class="text-xs font-bold text-primary uppercase tracking-wide">{{ store.selectedTestCase?.id }}</span>
-        <h2 class="text-lg font-semibold mt-1">{{ store.selectedTestCase?.scenario }}</h2>
+        <h2 class="text-xl font-semibold mt-1">{{ store.selectedTestCase?.scenario }}</h2>
       </div>
       <StatusBadge
         :status="result.evaluation.overallPass ? 'passed' : 'failed'"
@@ -21,16 +21,19 @@
       <span>Prompt has been modified — these results may be outdated</span>
     </div>
 
-    <div class="mb-8">
+    <div class="mb-8 flex flex-col gap-1">
       <div
         v-for="(msg, i) in result.simulation.transcript"
         :key="i"
         class="chat"
         :class="msg.role === 'agent' ? 'chat-start' : 'chat-end'"
       >
-        <div class="chat-header text-xs opacity-60">{{ msg.role === 'agent' ? 'AI Agent' : 'Caller' }}</div>
-        <div class="chat-bubble" :class="msg.role === 'agent' ? '' : 'chat-bubble-primary'" v-html="formatText(msg.content)">
-        </div>
+        <div class="chat-header text-xs opacity-50 mb-0.5">{{ msg.role === 'agent' ? 'AI Agent' : 'Caller' }}</div>
+        <div
+          class="chat-bubble text-sm max-w-[85%]"
+          :class="msg.role === 'agent' ? 'bg-base-200 text-base-content' : 'chat-bubble-primary'"
+          v-html="formatText(msg.content)"
+        ></div>
       </div>
     </div>
 
