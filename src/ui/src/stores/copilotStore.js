@@ -259,6 +259,10 @@ export const useCopilotStore = defineStore('copilot', {
       }
     },
 
+    resetAllResults() {
+      this.testResults = new Array(this.testCases.length).fill(null);
+    },
+
     selectTest(index) {
       this.selectedTestIndex = index;
     },

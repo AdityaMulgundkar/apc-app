@@ -1,5 +1,5 @@
 <template>
-  <div v-if="store.loading" class="flex flex-col items-center justify-center h-[300px] gap-3">
+  <div v-if="loading" class="flex flex-col items-center justify-center h-[300px] gap-3">
     <span class="loading loading-spinner loading-lg text-primary"></span>
     <p class="text-sm text-base-content/50">Running tests...</p>
   </div>
@@ -7,8 +7,8 @@
   <div v-else-if="result" class="max-w-[700px]">
     <div class="flex items-start justify-between mb-6">
       <div>
-        <span class="text-xs font-bold text-primary uppercase tracking-wide">{{ store.selectedTestCase?.id }}</span>
-        <h2 class="text-xl font-semibold mt-1">{{ store.selectedTestCase?.scenario }}</h2>
+        <span class="text-xs font-bold text-primary uppercase tracking-wide">{{ testCase?.id }}</span>
+        <h2 class="text-xl font-semibold mt-1">{{ testCase?.scenario }}</h2>
       </div>
       <StatusBadge
         :status="result.evaluation.overallPass ? 'passed' : 'failed'"
@@ -16,7 +16,7 @@
       />
     </div>
 
-    <div v-if="store.resultsAreStale" class="alert alert-info text-sm mb-4">
+    <div v-if="stale" class="alert alert-info text-sm mb-4">
       <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
       <span>Prompt has been modified — these results may be outdated</span>
     </div>
@@ -49,8 +49,7 @@
         >
           <div class="card-body p-3">
             <div class="flex items-center gap-2 mb-1">
-              <svg v-if="cr.passed" class="w-4 h-4 text-success flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-              <svg v-else class="w-4 h-4 text-error flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              <ResultIcon :passed="cr.passed" class="w-4 h-4 flex-shrink-0" />
               <span class="text-xs font-semibold">{{ cr.criterionId }}</span>
             </div>
             <p class="text-xs text-base-content/60 leading-snug m-0 pl-6">{{ cr.reasoning }}</p>
@@ -59,12 +58,12 @@
       </div>
     </div>
 
-    <div v-if="store.failedTests.length > 0 && !store.resultsAreStale && !store.applied" class="sticky -bottom-6 py-4 border-t border-base-300 bg-base-100">
+    <div v-if="showOptimize" class="sticky -bottom-6 py-4 border-t border-base-300 bg-base-100">
       <AppButton
         label="Optimize Prompt"
         loadingText="Optimizing..."
-        :loading="store.loading"
-        @click="store.optimize()"
+        :loading="loading"
+        @click="$emit('optimize')"
       />
     </div>
   </div>
@@ -73,23 +72,22 @@
 </template>
 
 <script>
-import { useCopilotStore } from '../stores/copilotStore';
 import AppButton from './AppButton.vue';
 import StatusBadge from './StatusBadge.vue';
 import EmptyState from './EmptyState.vue';
+import ResultIcon from './ResultIcon.vue';
 
 export default {
   name: 'ConversationView',
-  components: { AppButton, StatusBadge, EmptyState },
-  setup() {
-    const store = useCopilotStore();
-    return { store };
+  components: { AppButton, StatusBadge, EmptyState, ResultIcon },
+  props: {
+    testCase: { type: Object, default: null },
+    result: { type: Object, default: null },
+    loading: { type: Boolean, default: false },
+    stale: { type: Boolean, default: false },
+    showOptimize: { type: Boolean, default: false },
   },
-  computed: {
-    result() {
-      return this.store.selectedResult;
-    },
-  },
+  emits: ['optimize'],
   methods: {
     formatText(text) {
       let s = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

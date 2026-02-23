@@ -2,29 +2,27 @@
   <div class="flex flex-col h-full bg-base-100">
     <div class="flex items-center justify-between px-5 py-4 border-b border-base-300">
       <h3 class="text-sm font-semibold">Test Cases</h3>
-      <span class="badge badge-primary badge-sm px-2.5">{{ store.testCases.length }}</span>
+      <span class="badge badge-primary badge-sm px-2.5">{{ testCases.length }}</span>
     </div>
 
     <ul class="flex-1 overflow-y-auto list-none m-0 p-0">
       <li
-        v-for="(tc, i) in store.testCases"
+        v-for="(tc, i) in testCases"
         :key="tc.id"
         class="border-b border-base-300 cursor-pointer transition-colors"
-        :class="i === store.selectedTestIndex
+        :class="i === selectedIndex
           ? 'bg-primary/10'
           : 'hover:bg-primary/5'"
-        @click="store.selectTest(i)"
+        @click="$emit('select', i)"
       >
-        <div
-          class="py-3.5 px-5"
-        >
+        <div class="py-3.5 px-5">
           <div class="flex items-center gap-2 mb-2">
             <span
               class="w-2.5 h-2.5 rounded-full flex-shrink-0"
               :class="{
-                'border-2 border-base-content/20': store.testStatus(i) === 'pending',
-                'bg-success': store.testStatus(i) === 'passed',
-                'bg-error': store.testStatus(i) === 'failed',
+                'border-2 border-base-content/20': getStatus(i) === 'pending',
+                'bg-success': getStatus(i) === 'passed',
+                'bg-error': getStatus(i) === 'failed',
               }"
             ></span>
             <span class="text-xs font-extrabold text-primary">{{ tc.id }}</span>
@@ -39,13 +37,18 @@
 </template>
 
 <script>
-import { useCopilotStore } from '../stores/copilotStore';
-
 export default {
   name: 'TestCaseList',
-  setup() {
-    const store = useCopilotStore();
-    return { store };
+  props: {
+    testCases: { type: Array, required: true },
+    selectedIndex: { type: Number, default: 0 },
+    statuses: { type: Array, default: () => [] },
+  },
+  emits: ['select'],
+  methods: {
+    getStatus(i) {
+      return this.statuses[i] || 'pending';
+    },
   },
 };
 </script>

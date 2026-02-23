@@ -24,7 +24,7 @@
           <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" v-html="s.iconPath"></svg>
           <span v-show="sidebarExpanded" class="text-sm">{{ s.label }}</span>
           <svg
-            v-if="sidebarExpanded && store.canAccessStep(s.id)"
+            v-if="sidebarExpanded && isAccessible(s.id)"
             class="ml-auto w-4 h-4 opacity-40"
             fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
           ><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
@@ -54,9 +54,9 @@
 
       <!-- Right / Main Panel -->
       <div class="flex-1 overflow-y-auto p-6 relative">
-        <div v-if="store.error" class="alert alert-error shadow-sm mb-4">
-          <span>{{ store.error }}</span>
-          <button class="btn btn-sm btn-ghost" @click="store.error = null">✕</button>
+        <div v-if="error" class="alert alert-error shadow-sm mb-4">
+          <span>{{ error }}</span>
+          <button class="btn btn-sm btn-ghost" @click="$emit('clearError')">✕</button>
         </div>
 
         <slot />
@@ -66,8 +66,6 @@
 </template>
 
 <script>
-import { useCopilotStore } from '../stores/copilotStore';
-
 const STEPS = [
   { id: 'select', label: 'Select & Review', iconPath: '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />' },
   { id: 'test', label: 'Test Cases', iconPath: '<path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.59.659H9.06a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V19a2 2 0 01-2 2H7a2 2 0 01-2-2v-4.5" />' },
@@ -78,25 +76,30 @@ const STEPS = [
 
 export default {
   name: 'AppLayout',
+  props: {
+    step: { type: String, required: true },
+    error: { type: String, default: null },
+    accessibleSteps: { type: Array, default: () => [] },
+  },
+  emits: ['goToStep', 'clearError'],
   data() {
     return {
       sidebarExpanded: false,
       steps: STEPS,
     };
   },
-  setup() {
-    const store = useCopilotStore();
-    return { store };
-  },
   computed: {
     showMiddlePanel() {
-      return this.store.step === 'test' || this.store.step === 'results';
+      return this.step === 'test' || this.step === 'results';
     },
   },
   methods: {
+    isAccessible(stepId) {
+      return this.accessibleSteps.includes(stepId);
+    },
     stepClasses(s) {
-      const active = s.id === this.store.step;
-      const accessible = this.store.canAccessStep(s.id);
+      const active = s.id === this.step;
+      const accessible = this.isAccessible(s.id);
       return {
         'sidebar-active': active,
         'sidebar-accessible': !active && accessible,
@@ -104,7 +107,9 @@ export default {
       };
     },
     onStepClick(s) {
-      this.store.goToStep(s.id);
+      if (this.isAccessible(s.id)) {
+        this.$emit('goToStep', s.id);
+      }
     },
     openDevCredentials() {
       window.open('/dev-credentials', '_blank');

@@ -1,12 +1,12 @@
 <template>
-  <div v-if="store.optimization" class="max-w-[960px]">
+  <div v-if="optimization" class="max-w-[960px]">
     <div class="mb-5">
       <h2 class="text-xl font-semibold mb-1">Prompt Optimization</h2>
-      <p class="text-sm text-base-content/60 leading-relaxed">{{ store.optimization.changesSummary }}</p>
+      <p class="text-sm text-base-content/60 leading-relaxed">{{ optimization.changesSummary }}</p>
     </div>
 
     <div class="flex flex-col gap-2.5 mb-6">
-      <div v-for="(c, i) in store.optimization.changes" :key="i" class="card card-bordered card-compact bg-base-100">
+      <div v-for="(c, i) in optimization.changes" :key="i" class="card card-bordered card-compact bg-base-100">
         <div class="card-body p-3 gap-1.5">
           <div class="flex items-start gap-2 text-warning text-sm">
             <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
@@ -39,22 +39,21 @@
       <AppButton
         label="Re-run Failed Tests"
         loadingText="Running..."
-        :loading="store.loading"
-        @click="rerunFailed"
+        :loading="loading"
+        @click="$emit('rerunFailed')"
       />
       <AppButton
         label="Re-run All Tests"
         loadingText="Running..."
-        :loading="store.loading"
+        :loading="loading"
         variant="secondary"
-        @click="rerunAll"
+        @click="$emit('rerunAll')"
       />
     </div>
   </div>
 </template>
 
 <script>
-import { useCopilotStore } from '../stores/copilotStore';
 import { diffWords } from 'diff';
 import AppButton from './AppButton.vue';
 
@@ -65,10 +64,12 @@ function escapeHtml(str) {
 export default {
   name: 'OptimizationView',
   components: { AppButton },
-  setup() {
-    const store = useCopilotStore();
-    return { store };
+  props: {
+    optimization: { type: Object, default: null },
+    loading: { type: Boolean, default: false },
+    beforePrompt: { type: String, default: '' },
   },
+  emits: ['rerunFailed', 'rerunAll'],
   data() {
     return { syncing: false };
   },
@@ -83,21 +84,11 @@ export default {
       }
       this.$nextTick(() => { this.syncing = false; });
     },
-    async rerunFailed() {
-      await this.store.runFailedTests();
-      this.store.step = 'results';
-    },
-    async rerunAll() {
-      this.store.testResults = new Array(this.store.testCases.length).fill(null);
-      await this.store.runRemainingTests();
-      this.store.step = 'results';
-    },
   },
   computed: {
     diffParts() {
-      if (!this.store.optimization) return [];
-      const before = this.store.promptSnapshotAtRun || this.store.originalPrompt;
-      return diffWords(before, this.store.optimization.optimizedPrompt);
+      if (!this.optimization) return [];
+      return diffWords(this.beforePrompt, this.optimization.optimizedPrompt);
     },
     originalHtml() {
       return this.diffParts

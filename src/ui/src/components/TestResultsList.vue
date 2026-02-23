@@ -3,36 +3,36 @@
     <div class="flex items-center justify-between px-5 py-4 border-b border-base-300">
       <h3 class="text-sm font-semibold">Results</h3>
       <div class="flex items-center gap-1.5">
-        <span class="badge badge-primary badge-sm px-2.5">{{ store.testCases.length }}</span>
+        <span class="badge badge-primary badge-sm px-2.5">{{ testCases.length }}</span>
         <span
-          v-if="store.passRate !== null"
+          v-if="passRate !== null"
           class="badge badge-sm px-2.5"
-          :class="store.passRate >= 70 ? 'badge-success' : 'badge-error'"
-        >{{ store.passRate }}%</span>
+          :class="passRate >= 70 ? 'badge-success' : 'badge-error'"
+        >{{ passRate }}%</span>
       </div>
     </div>
 
     <ul class="flex-1 overflow-y-auto list-none m-0 p-0">
       <li
-        v-for="(tc, i) in store.testCases"
+        v-for="(tc, i) in testCases"
         :key="tc.id"
         class="border-b border-base-300 transition-colors"
         :class="[
-          i === store.selectedTestIndex
+          i === selectedIndex
             ? 'bg-primary/10'
             : '',
-          store.isTestRun(i) ? 'cursor-pointer hover:bg-primary/5' : 'opacity-40 cursor-not-allowed',
+          isRun(i) ? 'cursor-pointer hover:bg-primary/5' : 'opacity-40 cursor-not-allowed',
         ]"
-        @click="store.isTestRun(i) && store.selectTest(i)"
+        @click="isRun(i) && $emit('select', i)"
       >
         <div class="py-3.5 px-5">
           <div class="flex items-center gap-2 mb-2">
             <span
               class="w-2.5 h-2.5 rounded-full flex-shrink-0"
               :class="{
-                'border-2 border-base-content/20': !store.isTestRun(i),
-                'bg-success': store.testStatus(i) === 'passed',
-                'bg-error': store.testStatus(i) === 'failed',
+                'border-2 border-base-content/20': !isRun(i),
+                'bg-success': getStatus(i) === 'passed',
+                'bg-error': getStatus(i) === 'failed',
               }"
             ></span>
             <span class="text-xs font-extrabold text-primary">{{ tc.id }}</span>
@@ -47,13 +47,23 @@
 </template>
 
 <script>
-import { useCopilotStore } from '../stores/copilotStore';
-
 export default {
   name: 'TestResultsList',
-  setup() {
-    const store = useCopilotStore();
-    return { store };
+  props: {
+    testCases: { type: Array, required: true },
+    selectedIndex: { type: Number, default: 0 },
+    statuses: { type: Array, default: () => [] },
+    runFlags: { type: Array, default: () => [] },
+    passRate: { type: Number, default: null },
+  },
+  emits: ['select'],
+  methods: {
+    getStatus(i) {
+      return this.statuses[i] || 'pending';
+    },
+    isRun(i) {
+      return this.runFlags[i] || false;
+    },
   },
 };
 </script>
