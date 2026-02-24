@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="text-2xl font-bold mb-1">Select & Review Agent</h2>
+    <h2 class="text-xl font-semibold mb-1">Select & Review Agent</h2>
     <p class="text-sm text-base-content/60 mb-5">Choose a Voice AI agent, review its prompt, then generate test cases.</p>
 
     <div class="flex items-center gap-3 mb-6">
