@@ -4,7 +4,6 @@ import { ChatAnthropic } from '@langchain/anthropic';
 import { HumanMessage, AIMessage, SystemMessage, ToolMessage } from '@langchain/core/messages';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { config } from '../config';
 import { logger } from '../utils/logger';
 import { AgentAction } from '../types/agent';
 import { TestCase } from '../types/testCase';
@@ -21,12 +20,16 @@ const GOODBYE_PATTERNS = [
 const loadPrompt = (name: string): string =>
   readFileSync(resolve(__dirname, `../prompts/${name}.md`), 'utf-8');
 
+export type ModelFactory = (temperature: number) => ChatAnthropic;
+
 export class ConversationSimulator {
   private toolExecutor: ToolExecutor;
   private callerPromptTemplate: string;
+  private createModel: ModelFactory;
 
-  constructor(toolExecutor: ToolExecutor) {
+  constructor(toolExecutor: ToolExecutor, createModel: ModelFactory) {
     this.toolExecutor = toolExecutor;
+    this.createModel = createModel;
     this.callerPromptTemplate = loadPrompt('caller');
   }
 
@@ -42,21 +45,13 @@ export class ConversationSimulator {
 
     const { langchainTools, actionMap } = this.buildTools(actions, toolCallLog);
 
-    const agentModel = new ChatAnthropic({
-      model: config.anthropic.model,
-      temperature: 0.3,
-      anthropicApiKey: config.anthropic.apiKey,
-    });
+    const agentModel = this.createModel(0.3);
 
     const agentWithTools = langchainTools.length > 0
       ? agentModel.bindTools(langchainTools)
       : agentModel;
 
-    const callerModel = new ChatAnthropic({
-      model: config.anthropic.model,
-      temperature: 0.5,
-      anthropicApiKey: config.anthropic.apiKey,
-    });
+    const callerModel = this.createModel(0.5);
 
     const agentSystemPrompt = this.buildAgentSystemPrompt(agentPrompt, actions);
     const callerSystemPrompt = this.buildCallerSystemPrompt(testCase);

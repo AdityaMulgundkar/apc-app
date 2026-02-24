@@ -1,11 +1,28 @@
 import qs from 'qs';
-import axios from 'axios';
-import { config } from '../config';
+import axios, { AxiosStatic } from 'axios';
 import { Model } from '../model';
 import { logger } from '../utils/logger';
 
+export interface GhlAuthConfig {
+  apiDomain: string;
+  clientId: string;
+  clientSecret: string;
+}
+
 export class GhlAuth {
-  constructor(private model: Model) {}
+  private httpClient: AxiosStatic;
+  private ghlConfig: GhlAuthConfig;
+
+  constructor(private model: Model, httpClient?: AxiosStatic, ghlConfig?: GhlAuthConfig) {
+    this.httpClient = httpClient || axios;
+    if (ghlConfig) {
+      this.ghlConfig = ghlConfig;
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { config } = require('../config');
+      this.ghlConfig = { apiDomain: config.ghl.apiDomain, clientId: config.ghl.clientId, clientSecret: config.ghl.clientSecret };
+    }
+  }
 
   async authorizationHandler(code: string): Promise<void> {
     if (!code) {
@@ -31,11 +48,11 @@ export class GhlAuth {
 
   async refreshAccessToken(resourceId: string): Promise<void> {
     try {
-      const resp = await axios.post(
-        `${config.ghl.apiDomain}/oauth/token`,
+      const resp = await this.httpClient.post(
+        `${this.ghlConfig.apiDomain}/oauth/token`,
         qs.stringify({
-          client_id: config.ghl.clientId,
-          client_secret: config.ghl.clientSecret,
+          client_id: this.ghlConfig.clientId,
+          client_secret: this.ghlConfig.clientSecret,
           grant_type: 'refresh_token',
           refresh_token: this.model.getRefreshToken(resourceId),
         }),
@@ -53,7 +70,7 @@ export class GhlAuth {
       throw new Error('Installation not found for the following resource');
     }
 
-    const axiosInstance = axios.create({ baseURL: config.ghl.apiDomain });
+    const axiosInstance = this.httpClient.create({ baseURL: this.ghlConfig.apiDomain });
 
     axiosInstance.interceptors.request.use(async (requestConfig) => {
       requestConfig.headers['Authorization'] = `Bearer ${this.model.getAccessToken(resourceId)}`;
@@ -68,7 +85,7 @@ export class GhlAuth {
           originalRequest._retry = true;
           await this.refreshAccessToken(resourceId);
           originalRequest.headers.Authorization = `Bearer ${this.model.getAccessToken(resourceId)}`;
-          return axios(originalRequest);
+          return this.httpClient(originalRequest);
         }
         return Promise.reject(error);
       },
@@ -79,11 +96,11 @@ export class GhlAuth {
 
   private async generateAccessTokenRefreshTokenPair(code: string): Promise<void> {
     try {
-      const resp = await axios.post(
-        `${config.ghl.apiDomain}/oauth/token`,
+      const resp = await this.httpClient.post(
+        `${this.ghlConfig.apiDomain}/oauth/token`,
         qs.stringify({
-          client_id: config.ghl.clientId,
-          client_secret: config.ghl.clientSecret,
+          client_id: this.ghlConfig.clientId,
+          client_secret: this.ghlConfig.clientSecret,
           grant_type: 'authorization_code',
           code,
         }),

@@ -2,11 +2,15 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { json } from 'body-parser';
+import { ChatAnthropic } from '@langchain/anthropic';
 import { Model } from './model';
+import { config } from './config';
 import { GhlAuth } from './providers/ghlAuth';
 import { GhlProvider } from './providers/ghlProvider';
 import { AgentService } from './services/agentService';
 import { LlmService } from './services/llmService';
+import { ConversationSimulator } from './services/conversationSimulator';
+import { MockToolExecutor } from './services/mockToolExecutor';
 import { logger } from './utils/logger';
 import { requestLogger } from './middleware/requestLogger';
 import { createAuthMiddleware } from './middleware/auth';
@@ -27,7 +31,16 @@ const model = new Model();
 const ghlAuth = new GhlAuth(model);
 const ghlProvider = new GhlProvider(ghlAuth);
 const agentService = new AgentService(ghlProvider);
-const llmService = new LlmService();
+
+const createLlmModel = (temperature = 0) =>
+  new ChatAnthropic({
+    model: config.anthropic.model,
+    temperature,
+    anthropicApiKey: config.anthropic.apiKey,
+  });
+
+const conversationSimulator = new ConversationSimulator(new MockToolExecutor(), createLlmModel);
+const llmService = new LlmService(conversationSimulator, createLlmModel);
 
 if (process.env.DEV_ACCESS_TOKEN && process.env.DEV_LOCATION_ID) {
   model.installationObjects[process.env.DEV_LOCATION_ID] = {

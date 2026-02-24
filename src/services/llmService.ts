@@ -2,7 +2,6 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { config } from '../config';
 import { logger } from '../utils/logger';
 import { TestGenerationResultSchema, TestGenerationResult, TestCase } from '../types/testCase';
 import { SimulationResultSchema, SimulationResult, TestResultSchema, TestResult } from '../types/evaluation';
@@ -10,17 +9,11 @@ import { OptimizationResultSchema, OptimizationResult } from '../types/optimizat
 import { AgentAction } from '../types/agent';
 import { SimulationV2Result } from '../types/simulation';
 import { ConversationSimulator } from './conversationSimulator';
-import { MockToolExecutor } from './mockToolExecutor';
 
 const loadPrompt = (name: string): string =>
   readFileSync(resolve(__dirname, `../prompts/${name}.md`), 'utf-8');
 
-const createModel = () =>
-  new ChatAnthropic({
-    model: config.anthropic.model,
-    temperature: 0,
-    anthropicApiKey: config.anthropic.apiKey,
-  });
+export type LlmModelFactory = () => ChatAnthropic;
 
 export class LlmService {
   private generatePromptTemplate: string;
@@ -28,19 +21,21 @@ export class LlmService {
   private evaluatePromptTemplate: string;
   private optimizePromptTemplate: string;
   private conversationSimulator: ConversationSimulator;
+  private createModel: LlmModelFactory;
 
-  constructor() {
+  constructor(conversationSimulator: ConversationSimulator, createModel: LlmModelFactory) {
     this.generatePromptTemplate = loadPrompt('generate');
     this.simulatePromptTemplate = loadPrompt('simulate');
     this.evaluatePromptTemplate = loadPrompt('evaluate');
     this.optimizePromptTemplate = loadPrompt('optimize');
-    this.conversationSimulator = new ConversationSimulator(new MockToolExecutor());
+    this.conversationSimulator = conversationSimulator;
+    this.createModel = createModel;
   }
 
   async generateTestCases(agentPrompt: string, actions?: AgentAction[], count: number = 5): Promise<TestGenerationResult> {
     logger.info({ requestedCount: count }, 'Generating test cases');
     const prompt = ChatPromptTemplate.fromTemplate(this.generatePromptTemplate);
-    const model = createModel().withStructuredOutput(TestGenerationResultSchema);
+    const model = this.createModel().withStructuredOutput(TestGenerationResultSchema);
     const chain = prompt.pipe(model);
 
     const availableTools = actions?.length
@@ -58,7 +53,7 @@ export class LlmService {
   async simulateConversation(agentPrompt: string, testCase: TestCase, actions?: AgentAction[]): Promise<SimulationResult> {
     logger.info({ testCaseId: testCase.id }, 'Simulating conversation');
     const prompt = ChatPromptTemplate.fromTemplate(this.simulatePromptTemplate);
-    const model = createModel().withStructuredOutput(SimulationResultSchema);
+    const model = this.createModel().withStructuredOutput(SimulationResultSchema);
     const chain = prompt.pipe(model);
 
     const availableTools = actions?.length
@@ -96,7 +91,7 @@ export class LlmService {
   ): Promise<TestResult> {
     logger.info({ testCaseId: testCase.id }, 'Evaluating transcript');
     const prompt = ChatPromptTemplate.fromTemplate(this.evaluatePromptTemplate);
-    const model = createModel().withStructuredOutput(TestResultSchema);
+    const model = this.createModel().withStructuredOutput(TestResultSchema);
     const chain = prompt.pipe(model);
 
     const successCriteria = testCase.successCriteria
@@ -149,7 +144,7 @@ export class LlmService {
   async optimizePrompt(agentPrompt: string, failures: TestResult[], actions?: AgentAction[]): Promise<OptimizationResult> {
     logger.info({ failureCount: failures.length }, 'Optimizing prompt');
     const prompt = ChatPromptTemplate.fromTemplate(this.optimizePromptTemplate);
-    const model = createModel().withStructuredOutput(OptimizationResultSchema);
+    const model = this.createModel().withStructuredOutput(OptimizationResultSchema);
     const chain = prompt.pipe(model);
 
     const availableTools = actions?.length
