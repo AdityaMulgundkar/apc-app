@@ -15,7 +15,7 @@ export const useCopilotStore = defineStore('copilot', {
     testCount: 5,
     testCases: [],
     testResults: [],        // same length as testCases, null = not run
-    baselineResults: [],    // snapshot of first complete run
+    baselineResults: [],    // per-test first-ever result (locked once set)
     optimization: null,
     selectedTestIndex: 0,
     iterationCount: 0,
@@ -139,7 +139,7 @@ export const useCopilotStore = defineStore('copilot', {
         const result = await api.generateTestCases(this.selectedAgentId, this.currentPrompt, this.agent?.actions, this.testCount);
         this.testCases = result.testCases || [];
         this.testResults = new Array(this.testCases.length).fill(null);
-        this.baselineResults = [];
+        this.baselineResults = new Array(this.testCases.length).fill(null);
         this.step = 'test';
       } catch (err) {
         this.error = err.message;
@@ -148,11 +148,9 @@ export const useCopilotStore = defineStore('copilot', {
       }
     },
 
-    _snapshotBaseline() {
-      if (this.baselineResults.length > 0) return;
-      const allRun = this.testResults.every((r) => r !== null);
-      if (allRun) {
-        this.baselineResults = [...this.testResults];
+    _lockBaseline(index, result) {
+      if (this.baselineResults[index] === null) {
+        this.baselineResults[index] = result;
       }
     },
 
@@ -164,8 +162,8 @@ export const useCopilotStore = defineStore('copilot', {
         const tc = this.testCases[index];
         const response = await api.runTests(this.selectedAgentId, [tc], this.currentPrompt, this.agent?.actions);
         this.testResults[index] = response.results[0];
+        this._lockBaseline(index, response.results[0]);
         this.promptSnapshotAtRun = this.currentPrompt;
-        this._snapshotBaseline();
       } catch (err) {
         this.error = err.message;
       } finally {
@@ -192,9 +190,9 @@ export const useCopilotStore = defineStore('copilot', {
         );
         failed.forEach(({ i }, j) => {
           this.testResults[i] = response.results[j];
+          this._lockBaseline(i, response.results[j]);
         });
         this.promptSnapshotAtRun = this.currentPrompt;
-        this._snapshotBaseline();
       } catch (err) {
         this.error = err.message;
       } finally {
@@ -218,9 +216,9 @@ export const useCopilotStore = defineStore('copilot', {
         );
         pending.forEach(({ i }, j) => {
           this.testResults[i] = response.results[j];
+          this._lockBaseline(i, response.results[j]);
         });
         this.promptSnapshotAtRun = this.currentPrompt;
-        this._snapshotBaseline();
       } catch (err) {
         this.error = err.message;
       } finally {

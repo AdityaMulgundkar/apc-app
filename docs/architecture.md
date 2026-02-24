@@ -30,7 +30,7 @@ Add these in marketplace app > Advanced Settings > Auth:
 
 ## GHL APIs
 
-All require sub-account access token (already handled by existing `ghl.ts`):
+All require sub-account access token (handled by `ghlProvider.ts`):
 
 - `GET /voice-ai/agents` — list agents for the location
 - `GET /voice-ai/agents/:agentId` — fetch agent config including prompt
@@ -43,10 +43,12 @@ API version header: `Version: 2021-04-15`, Bearer auth. Base URL: `https://servi
 ```
 Routes → Services → Providers → External APIs
 
-copilot.ts → testRunner.ts → (orchestrates)
-             agentService.ts → ghlProvider.ts → GHL API
-             llmService.ts  → LangChain      → Anthropic API
+copilot.ts → agentService.ts → ghlProvider.ts → GHL API
+             llmService.ts   → LangChain      → Anthropic API
+             conversationSimulator.ts → (multi-turn simulation)
 ```
+
+Orchestration of the test-optimize loop lives in the frontend (Pinia store), not a backend service. Each route handles one step; the frontend calls them in sequence.
 
 Build inside existing `src/`. Service-layer architecture:
 
@@ -54,11 +56,12 @@ Build inside existing `src/`. Service-layer architecture:
 - `src/config.ts` — centralized env vars (GHL + Anthropic API key)
 
 ### Types
-- `src/types/agent.ts` — AgentConfig, AgentListResponse, PatchAgentRequest
-- `src/types/testCase.ts` — TestCase, SuccessCriteria, TestScenario (+ Zod schemas)
-- `src/types/evaluation.ts` — TestResult, ScoreCard, EvaluationReport (+ Zod schemas)
-- `src/types/optimization.ts` — OptimizationResult, PromptDiff (+ Zod schemas)
-- Private/internal types stay co-located next to their service file
+- `src/types/agent.ts` — AgentConfig, AgentAction, working hours, GHL agent data
+- `src/types/testCase.ts` — TestCase, SuccessCriteria, TestGenerationResult (+ Zod schemas)
+- `src/types/evaluation.ts` — TranscriptMessage, TestResult, SimulationResult (+ Zod schemas)
+- `src/types/optimization.ts` — OptimizationResult, changes summary (+ Zod schemas)
+- `src/types/simulation.ts` — ToolExecutor, ToolCallLogEntry, SimulationV2Result
+- `src/types/express.d.ts` — extends Express Request with optional `locationId`
 
 ### Middleware
 - `src/middleware/errorHandler.ts` — centralized Express error handling
@@ -78,7 +81,8 @@ Build inside existing `src/`. Service-layer architecture:
 
 ### Prompt Templates
 - `src/prompts/generate.md` — system prompt for test case generation
-- `src/prompts/simulate.md` — system prompt for conversation simulation
+- `src/prompts/simulate.md` — system prompt for single-shot conversation simulation (legacy)
+- `src/prompts/caller.md` — system prompt for the caller persona in multi-turn simulation
 - `src/prompts/evaluate.md` — system prompt for transcript evaluation
 - `src/prompts/optimize.md` — system prompt for prompt optimization
 - Loaded as strings, passed into LangChain's `ChatPromptTemplate.fromTemplate()`
@@ -86,7 +90,8 @@ Build inside existing `src/`. Service-layer architecture:
 ### Services
 - `src/services/agentService.ts` — uses `ghlProvider` for Voice AI agent CRUD
 - `src/services/llmService.ts` — uses LangChain + prompt templates for all 4 chain steps; Zod schemas for structured output parsing
-- `src/services/testRunner.ts` — orchestrates the full test-optimize loop
+- `src/services/conversationSimulator.ts` — multi-turn conversation simulation with two LLM instances (agent + caller), tool calling support, goodbye detection, transcript cleanup
+- `src/services/mockToolExecutor.ts` — returns realistic mock responses for agent actions (booking, data extraction, SMS, etc.)
 
 ### Routes
 - `src/routes/auth.ts` — existing auth routes (extracted from `index.ts`):
@@ -107,39 +112,53 @@ Build inside `src/ui/src/`. Match GHL look and feel. MVVM pattern via Vue + Pini
 No Vue Router — single-page wizard flow with step-based state.
 
 ### State Management
-- `src/ui/src/stores/copilotStore.ts` — Pinia store: holds current agent, test cases, scorecard, optimized prompt, wizard step, loading/error states
+- `src/ui/src/stores/copilotStore.js` — Pinia store: agents, prompts, test cases, results, optimization, wizard step, loading/error states. All orchestration logic (calling API routes in sequence) lives here.
 
-### API Layer (refactored from `ghl/index.js`)
-- `src/ui/src/api/ssoClient.ts` — SSO postMessage + decrypt (extracted from existing `ghl/index.js`)
-- `src/ui/src/api/copilotClient.ts` — calls backend copilot routes (list agents, generate tests, run, optimize, apply)
-- Remove `src/ui/src/ghl/` folder after migration
+### API Layer
+- `src/ui/src/api/copilotClient.js` — calls backend copilot routes (list agents, generate tests, run, optimize, apply)
 
 ### Components
-- `src/ui/src/App.vue` — main wizard container, manages step flow
-- `src/ui/src/components/AgentSelector.vue` — dropdown to pick a Voice AI agent
-- `src/ui/src/components/PromptViewer.vue` — displays current agent prompt
-- `src/ui/src/components/TestCasesTable.vue` — generated test cases + KPIs
-- `src/ui/src/components/ScoreCard.vue` — pass/fail results per test
-- `src/ui/src/components/PromptDiff.vue` — before vs. after prompt comparison
-- `src/ui/src/components/LoadingSpinner.vue` — reusable loading indicator
-- `src/ui/src/components/ErrorBanner.vue` — reusable error display
+
+All view components are **props-driven** and emit events — no direct store access. Only `App.vue` connects to the Pinia store and wires props/events to children. This makes every component independently testable.
+
+**Layout:**
+- `App.vue` — root wiring layer, connects store to all child components via props/events
+- `AppLayout.vue` — app shell with collapsible sidebar navigation, error banner, middle panel slot
+
+**Views (one per wizard step):**
+- `AgentSelector.vue` — agent dropdown, prompt editor, test count input, generate button
+- `TestCaseDetail.vue` — single test case scenario, persona, goal, success criteria, run buttons
+- `ConversationView.vue` — simulated conversation transcript (chat bubbles) + evaluation results
+- `OptimizationView.vue` — issue/fix cards, side-by-side original vs optimized prompt diff with synced scroll
+- `ApplyView.vue` — baseline vs latest pass rates, per-test comparison table, apply/reset buttons
+
+**List panels (left sidebar on test/results steps):**
+- `TestCaseList.vue` — selectable list of test cases with status dots
+- `TestResultsList.vue` — selectable list of results with pass/fail status and pass rate
+
+**Shared components:**
+- `AppButton.vue` — button with loading state and variants (primary, secondary, success, error)
+- `AppDropdown.vue` — reusable dropdown with v-model support
+- `StatusBadge.vue` — pass/fail/running badge with configurable color
+- `ResultIcon.vue` — checkmark or cross SVG based on passed prop
+- `EmptyState.vue` — placeholder for empty content areas
 
 ### Wizard Steps
-1. Select agent → shows AgentSelector
-2. View prompt → shows PromptViewer + "Generate Tests" button
-3. Review tests → shows TestCasesTable + "Run Tests" button
-4. View results → shows ScoreCard + "Optimize" button
-5. Review optimization → shows PromptDiff + "Apply" / "Re-run" buttons
+1. **Select** → AgentSelector (pick agent, review prompt, set test count, generate)
+2. **Test** → TestCaseList (left) + TestCaseDetail (right) — run tests individually or in batch
+3. **Results** → TestResultsList (left) + ConversationView (right) — review transcripts + evaluations
+4. **Optimize** → OptimizationView — review prompt changes, re-run failed or all tests
+5. **Apply** → ApplyView — compare baseline vs latest pass rates, apply to agent or start over
 
 
 ## LLM Integration (LangChain + Anthropic Claude)
 
 Four prompt-chain steps:
 
-1. **Generate**: Given agent prompt, produce test scenarios + success criteria
-2. **Simulate**: LLM plays caller and agent, produces transcript (mocked — not real Voice AI)
-3. **Evaluate**: Judge each transcript against success criteria, score pass/fail
-4. **Optimize**: Take failures + original prompt, rewrite prompt to fix issues
+1. **Generate**: Given agent prompt + available tools, produce test scenarios + success criteria. Test count is user-configurable (1–20).
+2. **Simulate**: Multi-turn conversation between two LLM instances — one plays the agent (with the real prompt + tool bindings), one plays the caller (with the test case persona/goal). The agent can invoke tools mid-conversation; a `MockToolExecutor` returns realistic fake results. Conversation ends on goodbye, empty response, or 12-turn limit. Transcript is cleaned of LLM meta-commentary.
+3. **Evaluate**: Judge transcript against success criteria, produce per-criterion pass/fail with reasoning. `overallPass` is deterministically computed (all criteria must pass), overriding the LLM's own judgment.
+4. **Optimize**: Take failures + original prompt, rewrite prompt to fix issues while preserving core behavior.
 
 Each step uses:
 - MD file loaded into `ChatPromptTemplate`
@@ -148,8 +167,8 @@ Each step uses:
 
 ## What's real vs. mocked
 
-- **Real**: GHL API calls (list/get/patch agents), all LLM calls
-- **Mocked**: Conversation simulation (LLM plays both sides instead of calling real Voice AI)
+- **Real**: GHL API calls (list/get/patch agents), all LLM calls (generation, evaluation, optimization), prompt patching back to GHL
+- **Mocked**: Conversation simulation — two LLM instances simulate the call instead of invoking the real Voice AI telephony. Tool calls during simulation use `MockToolExecutor` which returns realistic fake data.
 - Real Voice AI can be tested manually via GHL's built-in web/phone call test
 
 ## Env vars needed
@@ -170,8 +189,9 @@ Each step uses:
 - On startup, if dev credentials exist in `.env`, seed them into `Model` — skip OAuth entirely
 - Develop fully on localhost until next push
 
-## Refactoring existing code
+## UI Architecture
 
-- `src/ghl.ts` — split into `providers/ghlAuth.ts`, `providers/ghlProvider.ts`, `utils/sso.ts`
-- `src/index.ts` — remove example routes, add CORS, wire auth + copilot routes + middleware
-- `src/model.ts` — stays as-is
+- **DaisyUI v4** + **Tailwind CSS v3** for all styling — no custom CSS except sidebar theme and diff highlighting
+- **Props-driven components** — every component (except `App.vue`) receives data via props and emits events, making them independently unit-testable without a Pinia store
+- `App.vue` is the single wiring layer that connects the store to all child components
+- Agent list is loaded once on mount; wizard navigation is step-based with accessibility guards

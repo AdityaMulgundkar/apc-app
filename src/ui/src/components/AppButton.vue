@@ -24,7 +24,7 @@ export default {
   computed: {
     btnClass() {
       switch (this.variant) {
-        case 'secondary': return 'btn-outline btn-primary';
+        case 'secondary': return 'btn-ghost';
         case 'success': return 'btn-success';
         case 'error': return 'btn-error';
         default: return 'btn-primary';

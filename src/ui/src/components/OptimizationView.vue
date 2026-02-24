@@ -39,13 +39,15 @@
       <AppButton
         label="Re-run Failed Tests"
         loadingText="Running..."
-        :loading="loading"
+        :loading="loadingAction === 'failed'"
+        :disabled="loadingAction === 'all'"
         @click="$emit('rerunFailed')"
       />
       <AppButton
         label="Re-run All Tests"
         loadingText="Running..."
-        :loading="loading"
+        :loading="loadingAction === 'all'"
+        :disabled="loadingAction === 'failed'"
         variant="secondary"
         @click="$emit('rerunAll')"
       />
@@ -66,7 +68,7 @@ export default {
   components: { AppButton },
   props: {
     optimization: { type: Object, default: null },
-    loading: { type: Boolean, default: false },
+    loadingAction: { type: String, default: null },
     beforePrompt: { type: String, default: '' },
   },
   emits: ['rerunFailed', 'rerunAll'],

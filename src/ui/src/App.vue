@@ -64,7 +64,7 @@
       <OptimizationView
         v-else-if="store.step === 'optimize'"
         :optimization="store.optimization"
-        :loading="store.loading"
+        :loadingAction="rerunMode"
         :beforePrompt="store.promptSnapshotAtRun || store.originalPrompt"
         @rerunFailed="handleRerunFailed"
         @rerunAll="handleRerunAll"
@@ -78,6 +78,8 @@
         :iterationCount="store.iterationCount"
         :perTestComparison="store.perTestComparison"
         :loading="store.loading"
+        :originalPrompt="store.originalPrompt"
+        :currentPrompt="store.currentPrompt"
         @apply="store.applyOptimizedPrompt()"
         @reset="store.reset()"
       />
@@ -105,14 +107,21 @@ export default {
     onMounted(() => { store.loadAgents(); });
     return { store };
   },
+  data() {
+    return { rerunMode: null };
+  },
   methods: {
     async handleRerunFailed() {
+      this.rerunMode = 'failed';
       await this.store.runFailedTests();
+      this.rerunMode = null;
       this.store.step = 'results';
     },
     async handleRerunAll() {
+      this.rerunMode = 'all';
       this.store.resetAllResults();
       await this.store.runRemainingTests();
+      this.rerunMode = null;
       this.store.step = 'results';
     },
   },

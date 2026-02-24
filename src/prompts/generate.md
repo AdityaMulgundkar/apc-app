@@ -14,6 +14,7 @@ Analyze the agent prompt and generate exactly {testCount} test cases. Each test 
 - Target a distinct scenario the agent should handle based on its prompt
 - Include a realistic caller persona with a specific goal
 - Define clear, measurable success criteria
+- Use criteria IDs that reset per test case (e.g., tc-1 has sc-1, sc-2; tc-2 also starts at sc-1, sc-2). Each test case has scenario index starting at 1.
 
 IMPORTANT: Only reference tools that are listed in the "Available Tools" section above. Do NOT invent or assume tools that are not listed. If a tool is listed, you may create test cases that verify the agent uses that specific tool correctly. If no tools are available, do not create test cases that expect tool usage.
 
