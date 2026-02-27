@@ -13,23 +13,32 @@
       />
 
       <template v-if="agent && !applied">
-        <label class="flex items-center gap-2">
-          <span class="text-sm text-base-content/60">Tests:</span>
-          <input
-            type="number"
-            class="input input-bordered w-20 text-center text-sm"
-            :value="testCount"
-            @input="$emit('updateTestCount', Number($event.target.value))"
-            min="1"
-            max="20"
-          />
-        </label>
+        <div class="flex items-center gap-3 flex-wrap">
+          <label
+            v-for="cat in categories"
+            :key="cat.key"
+            class="flex items-center gap-1.5"
+          >
+            <span
+              class="text-xs font-semibold px-1.5 py-0.5 rounded"
+              :class="cat.badgeClass"
+            >{{ cat.label }}</span>
+            <input
+              type="number"
+              class="input input-bordered w-16 text-center text-sm"
+              :value="categoryCounts[cat.key]"
+              @input="$emit('updateCategoryCount', cat.key, Number($event.target.value))"
+              min="0"
+              max="10"
+            />
+          </label>
+        </div>
         <AppButton
           label="Generate Test Cases"
           loadingText="Generating..."
           :loading="loading"
-          :disabled="!editedPrompt.trim()"
-          @click="$emit('generateTests', testCount)"
+          :disabled="!editedPrompt.trim() || totalTestCount === 0"
+          @click="$emit('generateTests')"
         />
       </template>
     </div>
@@ -89,15 +98,24 @@ export default {
     selectedAgentId: { type: String, default: '' },
     agent: { type: Object, default: null },
     applied: { type: Boolean, default: false },
-    testCount: { type: Number, default: 5 },
+    categoryCounts: { type: Object, default: () => ({ red: 2, blue: 2, biased: 1, general: 1 }) },
+    totalTestCount: { type: Number, default: 0 },
     loading: { type: Boolean, default: false },
     editedPrompt: { type: String, default: '' },
     promptModified: { type: Boolean, default: false },
   },
-  emits: ['selectAgent', 'updateTestCount', 'updatePrompt', 'generateTests'],
+  emits: ['selectAgent', 'updateCategoryCount', 'updatePrompt', 'generateTests'],
   computed: {
     agentOptions() {
       return this.agents.map((a) => ({ value: a.id, label: a.agentName }));
+    },
+    categories() {
+      return [
+        { key: 'red', label: 'Red', badgeClass: 'bg-error/15 text-error' },
+        { key: 'blue', label: 'Blue', badgeClass: 'bg-info/15 text-info' },
+        { key: 'biased', label: 'Biased', badgeClass: 'bg-warning/15 text-warning' },
+        { key: 'general', label: 'General', badgeClass: 'bg-base-content/10 text-base-content/70' },
+      ];
     },
   },
   methods: {

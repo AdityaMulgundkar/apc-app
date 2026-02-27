@@ -32,14 +32,15 @@
         :selectedAgentId="store.selectedAgentId || ''"
         :agent="store.agent"
         :applied="store.applied"
-        :testCount="store.testCount"
+        :categoryCounts="store.categoryCounts"
+        :totalTestCount="store.totalTestCount"
         :loading="store.loading"
         :editedPrompt="store.editedPrompt"
         :promptModified="store.promptModified"
         @selectAgent="store.selectAgent($event)"
-        @updateTestCount="store.testCount = $event"
+        @updateCategoryCount="(cat, val) => store.updateCategoryCount(cat, val)"
         @updatePrompt="store.updateEditedPrompt($event)"
-        @generateTests="store.generateTests($event)"
+        @generateTests="store.generateTests()"
       />
       <TestCaseDetail
         v-else-if="store.step === 'test'"

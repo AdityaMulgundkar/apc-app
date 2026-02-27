@@ -26,6 +26,10 @@
               }"
             ></span>
             <span class="text-xs font-extrabold text-primary">{{ tc.id }}</span>
+            <span
+              class="badge badge-sm px-1.5 text-[10px] font-bold uppercase"
+              :class="categoryBadgeClass(tc.category)"
+            >{{ tc.category }}</span>
             <span class="badge badge-primary badge-outline badge-sm px-2.5 ml-auto">{{ tc.successCriteria?.length || 0 }} criteria</span>
           </div>
           <p class="text-[13px] font-medium leading-snug m-0 line-clamp-2">{{ tc.scenario }}</p>
@@ -48,6 +52,15 @@ export default {
   methods: {
     getStatus(i) {
       return this.statuses[i] || 'pending';
+    },
+    categoryBadgeClass(category) {
+      const map = {
+        red: 'bg-error/15 text-error',
+        blue: 'bg-info/15 text-info',
+        biased: 'bg-warning/15 text-warning',
+        general: 'bg-base-content/10 text-base-content/70',
+      };
+      return map[category] || map.general;
     },
   },
 };

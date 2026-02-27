@@ -12,7 +12,7 @@ export const useCopilotStore = defineStore('copilot', {
     originalPrompt: '',
     editedPrompt: '',
 
-    testCount: 5,
+    categoryCounts: { red: 2, blue: 2, biased: 1, general: 1 },
     testCases: [],
     testResults: [],        // same length as testCases, null = not run
     baselineResults: [],    // per-test first-ever result (locked once set)
@@ -75,6 +75,15 @@ export const useCopilotStore = defineStore('copilot', {
         };
       });
     },
+    totalTestCount: (state) =>
+      Object.values(state.categoryCounts).reduce((sum, n) => sum + (n || 0), 0),
+    testCasesByCategory: (state) => {
+      const grouped = { red: [], blue: [], biased: [], general: [] };
+      for (const tc of state.testCases) {
+        if (grouped[tc.category]) grouped[tc.category].push(tc);
+      }
+      return grouped;
+    },
     canAccessStep() {
       return (step) => {
         const hasAnyResult = this.testResults.some((r) => r !== null);
@@ -131,12 +140,18 @@ export const useCopilotStore = defineStore('copilot', {
       this.editedPrompt = value;
     },
 
-    async generateTests(count = 5) {
-      this.testCount = Math.max(1, Math.min(20, Math.round(count)));
+    updateCategoryCount(category, value) {
+      this.categoryCounts = {
+        ...this.categoryCounts,
+        [category]: Math.max(0, Math.min(10, Math.round(value))),
+      };
+    },
+
+    async generateTests() {
       this.loading = true;
       this.error = null;
       try {
-        const result = await api.generateTestCases(this.selectedAgentId, this.currentPrompt, this.agent?.actions, this.testCount);
+        const result = await api.generateTestCases(this.selectedAgentId, this.currentPrompt, this.agent?.actions, this.categoryCounts);
         this.testCases = result.testCases || [];
         this.testResults = new Array(this.testCases.length).fill(null);
         this.baselineResults = new Array(this.testCases.length).fill(null);

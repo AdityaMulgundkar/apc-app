@@ -30,8 +30,8 @@ export const createCopilotRouter = (agentService: AgentService, llmService: LlmS
     try {
       const prompt = req.body.prompt
         || await agentService.getAgentPrompt(req.locationId!, req.params.id);
-      const count = req.body.count || 5;
-      const result = await llmService.generateTestCases(prompt, req.body.actions, count);
+      const categoryCounts = req.body.categoryCounts || { blue: req.body.count || 5 };
+      const result = await llmService.generateTestCases(prompt, req.body.actions, categoryCounts);
       res.json(result);
     } catch (error: any) {
       logger.error({ err: error }, 'Failed to generate test cases');

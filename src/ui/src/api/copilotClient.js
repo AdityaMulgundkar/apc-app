@@ -20,10 +20,10 @@ export function getAgent(agentId) {
   return request(`/agents/${agentId}`);
 }
 
-export function generateTestCases(agentId, prompt, actions, count) {
+export function generateTestCases(agentId, prompt, actions, categoryCounts) {
   return request(`/agents/${agentId}/test`, {
     method: 'POST',
-    body: JSON.stringify({ prompt, actions, count }),
+    body: JSON.stringify({ prompt, actions, categoryCounts }),
   });
 }
 

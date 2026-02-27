@@ -6,8 +6,13 @@ export const SuccessCriteriaSchema = z.object({
   category: z.enum(['greeting', 'information_handling', 'objection_handling', 'closing', 'tone', 'compliance']),
 });
 
+export const TEST_CATEGORIES = ['red', 'blue', 'biased', 'general'] as const;
+export const TestCategorySchema = z.enum(TEST_CATEGORIES);
+export type TestCategory = z.infer<typeof TestCategorySchema>;
+
 export const TestCaseSchema = z.object({
   id: z.string(),
+  category: TestCategorySchema,
   scenario: z.string(),
   callerPersona: z.string(),
   callerGoal: z.string(),

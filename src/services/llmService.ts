@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { logger } from '../utils/logger';
-import { TestGenerationResultSchema, TestGenerationResult, TestCase } from '../types/testCase';
+import { TestGenerationResultSchema, TestGenerationResult, TestCase, TestCategory, TEST_CATEGORIES } from '../types/testCase';
 import { SimulationResultSchema, SimulationResult, TestResultSchema, TestResult } from '../types/evaluation';
 import { OptimizationResultSchema, OptimizationResult } from '../types/optimization';
 import { AgentAction } from '../types/agent';
@@ -14,9 +14,10 @@ const loadPrompt = (name: string): string =>
   readFileSync(resolve(__dirname, `../prompts/${name}.md`), 'utf-8');
 
 export type LlmModelFactory = () => ChatAnthropic;
+export type CategoryCounts = Partial<Record<TestCategory, number>>;
 
 export class LlmService {
-  private generatePromptTemplate: string;
+  private generatePromptTemplates: Record<TestCategory, string>;
   private simulatePromptTemplate: string;
   private evaluatePromptTemplate: string;
   private optimizePromptTemplate: string;
@@ -24,7 +25,9 @@ export class LlmService {
   private createModel: LlmModelFactory;
 
   constructor(conversationSimulator: ConversationSimulator, createModel: LlmModelFactory) {
-    this.generatePromptTemplate = loadPrompt('generate');
+    this.generatePromptTemplates = Object.fromEntries(
+      TEST_CATEGORIES.map((cat) => [cat, loadPrompt(`generate-${cat}`)]),
+    ) as Record<TestCategory, string>;
     this.simulatePromptTemplate = loadPrompt('simulate');
     this.evaluatePromptTemplate = loadPrompt('evaluate');
     this.optimizePromptTemplate = loadPrompt('optimize');
@@ -32,11 +35,12 @@ export class LlmService {
     this.createModel = createModel;
   }
 
-  async generateTestCases(agentPrompt: string, actions?: AgentAction[], count: number = 5): Promise<TestGenerationResult> {
-    logger.info({ requestedCount: count }, 'Generating test cases');
-    const prompt = ChatPromptTemplate.fromTemplate(this.generatePromptTemplate);
-    const model = this.createModel().withStructuredOutput(TestGenerationResultSchema);
-    const chain = prompt.pipe(model);
+  async generateTestCases(
+    agentPrompt: string,
+    actions?: AgentAction[],
+    categoryCounts: CategoryCounts = { blue: 5 },
+  ): Promise<TestGenerationResult> {
+    logger.info({ categoryCounts }, 'Generating test cases');
 
     const availableTools = actions?.length
       ? actions.map((a) => {
@@ -45,9 +49,32 @@ export class LlmService {
         }).join('\n')
       : 'No tools configured for this agent.';
 
-    const result = await chain.invoke({ agentPrompt, availableTools, testCount: String(count) });
-    logger.info({ count: result.testCases.length }, 'Test cases generated');
-    return result;
+    const model = this.createModel().withStructuredOutput(TestGenerationResultSchema);
+    const allTestCases: TestCase[] = [];
+    let globalIndex = 1;
+
+    for (const category of TEST_CATEGORIES) {
+      const count = categoryCounts[category];
+      if (!count || count <= 0) continue;
+
+      const template = this.generatePromptTemplates[category];
+      const prompt = ChatPromptTemplate.fromTemplate(template);
+      const chain = prompt.pipe(model);
+
+      const result = await chain.invoke({
+        agentPrompt,
+        availableTools,
+        testCount: String(count),
+      });
+
+      for (const tc of result.testCases) {
+        allTestCases.push({ ...tc, id: `tc-${globalIndex}`, category });
+        globalIndex++;
+      }
+    }
+
+    logger.info({ count: allTestCases.length }, 'Test cases generated');
+    return { testCases: allTestCases };
   }
 
   async simulateConversation(agentPrompt: string, testCase: TestCase, actions?: AgentAction[]): Promise<SimulationResult> {
